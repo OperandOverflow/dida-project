@@ -1,0 +1,33 @@
+//
+// Protocol buffers definition for Dadkvs Syncronization services between servers
+//
+
+// WARNING: The content of this file may be merged into other files in the future
+
+syntax = "proto3";
+package dadkvs;
+
+/**
+ * A request with a sequence number assigned by the leader server
+ */
+message SequencedRequest {
+  int32 requestid = 1;
+  int32 requestseq = 2;
+}
+
+/**
+ * List of sequenced requests
+ */
+message RequestOrder {
+  repeated SequencedRequest orderedRequests = 1;
+}
+
+message Empty {
+}
+
+/**
+  * Service for subordinating servers to receive the order of requests from the leader server
+  */
+service DadkvsServerSyncService {
+  rpc receiveReqOrder (RequestOrder) returns (Empty);
+}
