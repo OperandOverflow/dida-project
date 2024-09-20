@@ -39,7 +39,7 @@ The project is composed of three main components:
 
 The servers run the base implementation. They are executed running the following command in the *server* directory:
 
-`mvn exec:java -Dexec.args="{port} {id}"`
+`mvn exec:java -D"exec.args"="{port} {id}"`
 
 Where you must fill in the following arguments:
 - **{id}**: Sequential id of the server. Current implementation requires servers to be ID'ed starting from *0* to *N-1* servers.
