@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * This class implements the gRPC service for the server-to-server
- * request processing synchronization.
+ * synchronization of request orders.
  */
 public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceImplBase {
 
