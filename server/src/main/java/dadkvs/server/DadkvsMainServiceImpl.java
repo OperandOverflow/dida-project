@@ -4,6 +4,7 @@ package dadkvs.server;
 import dadkvs.DadkvsMain;
 import dadkvs.DadkvsMainServiceGrpc;
 
+import dadkvs.server.entities.*;
 import io.grpc.stub.StreamObserver;
 
 public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServiceImplBase {
@@ -21,6 +22,19 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		// for debug purposes
 		System.out.println("Receiving read request:" + request);
 
+		// Convert the request to the internal format
+		AbsRequest readRequest = new ReadRequest(request.getReqid(), request.getKey());
+		// Add the request to the queue
+		this.server_state.request_queue.addRequest(readRequest);
+
+		/**
+		 * TODO: before processing the request, wait for the order of requests
+		 * 	from the leader.
+		 */
+
+		/**
+		 * TODO: let the OrderedRequestProcessor process the request
+		 */
 		int reqid = request.getReqid();
 		int key = request.getKey();
 		VersionedValue vv = this.server_state.store.read(key);
@@ -37,6 +51,15 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		// for debug purposes
 		System.out.println("Receiving commit request:" + request);
 
+		// Convert the request to the internal format
+		AbsRequest commitRequest = new CommitRequest(
+					request.getReqid(), request.getKey1(), request.getVersion1(),
+					request.getKey2(), request.getVersion2(), request.getWritekey(),
+					request.getWriteval()
+					);
+		// Add the request to the queue
+		this.server_state.request_queue.addRequest(commitRequest);
+
 		int reqid = request.getReqid();
 		int key1 = request.getKey1();
 		int version1 = request.getVersion1();
@@ -48,7 +71,9 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		// for debug purposes
 		System.out.println("reqid " + reqid + " key1 " + key1 + " v1 " + version1 + " k2 " + key2 + " v2 " + version2 + " wk " + writekey + " writeval " + writeval);
 
-
+		/**
+		 * TODO: let the OrderedRequestProcessor process the request
+		 */
 		this.timestamp++;
 		TransactionRecord txrecord = new TransactionRecord (key1, version1, key2, version2, writekey, writeval, this.timestamp);
 		boolean result = this.server_state.store.commit (txrecord);
@@ -57,7 +82,7 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		// for debug purposes
 		System.out.println("Result is ready for request with reqid " + reqid);
 
-		DadkvsMain.CommitReply response =DadkvsMain.CommitReply.newBuilder()
+		DadkvsMain.CommitReply response = DadkvsMain.CommitReply.newBuilder()
 			.setReqid(reqid).setAck(result).build();
 
 		responseObserver.onNext(response);
