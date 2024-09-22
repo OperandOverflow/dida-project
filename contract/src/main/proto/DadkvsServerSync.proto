@@ -19,7 +19,7 @@ message SequencedRequest {
  * List of sequenced requests
  */
 message RequestOrder {
-  repeated SequencedRequest orderedRequests = 1;
+  repeated SequencedRequest orderedrequests = 1;
 }
 
 message Empty {
