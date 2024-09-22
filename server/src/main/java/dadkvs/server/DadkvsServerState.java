@@ -7,6 +7,7 @@ public class DadkvsServerState {
     int            my_id;
     int            store_size;
     KeyValueStore  store;
+    RequestQueue   request_queue;
     MainLoop       main_loop;
     Thread         main_loop_worker;
 
@@ -18,6 +19,7 @@ public class DadkvsServerState {
         debug_mode = 0;
         store_size = kv_size;
         store = new KeyValueStore(kv_size);
+        request_queue = new RequestQueue();
         main_loop = new MainLoop(this);
         main_loop_worker = new Thread (main_loop);
         main_loop_worker.start();
