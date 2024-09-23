@@ -2,6 +2,7 @@ package dadkvs.server;
 
 import dadkvs.DadkvsServerSync;
 import dadkvs.DadkvsServerSyncServiceGrpc;
+import io.grpc.stub.StreamObserver;
 
 import java.util.List;
 
@@ -27,13 +28,13 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
      * @param responseObserver The response observer
      */
     @Override
-    public void receiveReqOrder(DadkvsServerSync.RequestOrder request, io.grpc.stub.StreamObserver<DadkvsServerSync.Empty> responseObserver) {
+    public void receiveReqOrder(DadkvsServerSync.RequestOrder request, StreamObserver<DadkvsServerSync.Empty> responseObserver) {
 
         // Obtain the list of sequenced requests from the message
         List<DadkvsServerSync.SequencedRequest> orderedRequests = request.getOrderedrequestsList();
 
         // Notify the request processor about incoming sequenced requests
-        // TODO
+        this.server_state.ordered_request_processor.addReqOrderList(orderedRequests);
 
         // Send empty response to the leader
         DadkvsServerSync.Empty response = DadkvsServerSync.Empty.getDefaultInstance();
@@ -45,7 +46,9 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
      * The leader sends the order of requests to other servers using
      * this method.
      */
-    public void sendReqOrder() {
-
+    public void sendReqOrder(int reqid) {
+        this.sequence_number++;
+        DadkvsServerSync.SequencedRequest.Builder sequencedRequestBuilder = DadkvsServerSync.SequencedRequest.newBuilder();
+        // TODO
     }
 }
