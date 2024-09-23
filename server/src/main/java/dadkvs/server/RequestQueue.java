@@ -7,6 +7,7 @@ import java.util.HashMap;
 /**
  * This class is used to store requests until they are
  * processed in the correct order.
+ * This class is not used in the current implementation.
  */
 public class RequestQueue {
 
