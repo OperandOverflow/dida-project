@@ -68,7 +68,7 @@ The console client servers as a front-end to issue configuration settings to ser
 
 The console client opens a terminal from where students may issue configuration changes to servers. The following commands are available:
 - `help` - Shows the full command list;
-- `leader on/off replica_id` - Instructs a replica to strat/stop acting as a Paxos leader;
+- `leader on/off replica_id` - Instructs a replica to start/stop acting as a Paxos leader;
 - `debug mode replica_id` - Activates debug on a given replica;
 - `reconfig configuration` - Executes a transaction on key 0 to change the configuration;
 - `exit` - Gracefully finishes the console.
