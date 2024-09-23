@@ -23,24 +23,13 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		System.out.println("Receiving read request:" + request);
 
 		// Convert the request to the internal format
-		AbsRequest readRequest = new ReadRequest(request.getReqid(), request.getKey());
-		// Add the request to the queue
-		this.server_state.request_queue.addRequest(readRequest);
+		ReadRequest readRequest = new ReadRequest(request.getReqid(), request.getKey());
 
-		/**
-		 * TODO: before processing the request, wait for the order of requests
-		 * 	from the leader.
-		 */
-
-		/**
-		 * TODO: let the OrderedRequestProcessor process the request
-		 */
-		int reqid = request.getReqid();
-		int key = request.getKey();
-		VersionedValue vv = this.server_state.store.read(key);
+		// Process the request
+		VersionedValue vv = this.server_state.ordered_request_processor.read(readRequest);
 
 		DadkvsMain.ReadReply response =DadkvsMain.ReadReply.newBuilder()
-			.setReqid(reqid).setValue(vv.getValue()).setTimestamp(vv.getVersion()).build();
+			.setReqid(request.getReqid()).setValue(vv.getValue()).setTimestamp(vv.getVersion()).build();
 
 		responseObserver.onNext(response);
 		responseObserver.onCompleted();
@@ -52,13 +41,11 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		System.out.println("Receiving commit request:" + request);
 
 		// Convert the request to the internal format
-		AbsRequest commitRequest = new CommitRequest(
+		CommitRequest commitRequest = new CommitRequest(
 					request.getReqid(), request.getKey1(), request.getVersion1(),
 					request.getKey2(), request.getVersion2(), request.getWritekey(),
 					request.getWriteval()
 					);
-		// Add the request to the queue
-		this.server_state.request_queue.addRequest(commitRequest);
 
 		int reqid = request.getReqid();
 		int key1 = request.getKey1();
