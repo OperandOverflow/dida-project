@@ -17,9 +17,6 @@ public class OrderedRequestProcessor {
     /** The timestamp of when last write was done */
     private int                 timestamp;
 
-    /** This queue is not used in the current implementation */
-    private RequestQueue        request_queue;
-
     private final PriorityQueue<DadkvsServerSync.SequencedRequest> request_order;
 
     private final Object        order_lock = new Object();
@@ -27,7 +24,6 @@ public class OrderedRequestProcessor {
     public OrderedRequestProcessor(DadkvsServerState state) {
         this.server_state = state;
         this.timestamp = 0;
-        this.request_queue = new RequestQueue();
         this.request_order = new PriorityQueue<DadkvsServerSync.SequencedRequest>(
                 (o1, o2) -> o1.getRequestseq() - o2.getRequestseq()
         );
@@ -129,8 +125,17 @@ public class OrderedRequestProcessor {
     }
 
     private boolean processCommit(CommitRequest request) {
-        // TODO
-        return false;
+        int key1 = request.getKey1();
+        int version1 = request.getVersion1();
+        int key2 = request.getKey2();
+        int version2 = request.getVersion2();
+        int writekey = request.getWriteKey();
+        int writeval = request.getWriteValue();
+
+        this.timestamp++;
+        TransactionRecord txrecord = new TransactionRecord (key1, version1, key2, version2, writekey, writeval, this.timestamp);
+        boolean result = this.server_state.store.commit (txrecord);
+        return result;
     }
 
     // ==============================================================================
