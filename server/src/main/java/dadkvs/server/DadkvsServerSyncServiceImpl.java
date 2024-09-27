@@ -4,7 +4,13 @@ import dadkvs.DadkvsServerSync;
 import dadkvs.DadkvsServerSyncServiceGrpc;
 import io.grpc.stub.StreamObserver;
 
-import java.util.List;
+import dadkvs.util.GenericResponseCollector;
+import dadkvs.util.CollectorStreamObserver;
+
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+
+import java.util.*;
 
 /**
  * This class implements the gRPC service for the server-to-server
@@ -48,7 +54,19 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
      */
     public void sendReqOrder(int reqid) {
         this.sequence_number++;
+
+        // Create the sequenced request
         DadkvsServerSync.SequencedRequest.Builder sequencedRequestBuilder = DadkvsServerSync.SequencedRequest.newBuilder();
-        // TODO
+        sequencedRequestBuilder.setRequestid(reqid).setRequestseq(this.sequence_number);
+
+        List<DadkvsServerSync.SequencedRequest> sequencedRequests = new ArrayList<DadkvsServerSync.SequencedRequest>();
+        sequencedRequests.add(sequencedRequestBuilder.build());
+
+        DadkvsServerSync.RequestOrder.Builder requestOrderBuilder = DadkvsServerSync.RequestOrder.newBuilder();
+        requestOrderBuilder.addAllOrderedrequests(sequencedRequests);
+
+        ArrayList<DadkvsServerSync.Empty> responseList = new ArrayList<DadkvsServerSync.Empty>();
+        GenericResponseCollector<DadkvsServerSync.Empty> responseCollector = new GenericResponseCollector<DadkvsServerSync.Empty>(responseList, 4);
+        // TODO: invoke the receiveReqOrder method of other replicas
     }
 }
