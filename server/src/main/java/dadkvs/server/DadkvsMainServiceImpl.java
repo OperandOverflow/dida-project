@@ -46,30 +46,13 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 					request.getWriteval()
 					);
 
-		int reqid = request.getReqid();
-		int key1 = request.getKey1();
-		int version1 = request.getVersion1();
-		int key2 = request.getKey2();
-		int version2 = request.getVersion2();
-		int writekey = request.getWritekey();
-		int writeval = request.getWriteval();
+		boolean result = this.server_state.ordered_request_processor.committx(commitRequest);
 
 		// for debug purposes
-		System.out.println("reqid " + reqid + " key1 " + key1 + " v1 " + version1 + " k2 " + key2 + " v2 " + version2 + " wk " + writekey + " writeval " + writeval);
-
-		/**
-		 * TODO: let the OrderedRequestProcessor process the request
-		 */
-		this.timestamp++;
-		TransactionRecord txrecord = new TransactionRecord (key1, version1, key2, version2, writekey, writeval, this.timestamp);
-		boolean result = this.server_state.store.commit (txrecord);
-
-
-		// for debug purposes
-		System.out.println("Result is ready for request with reqid " + reqid);
+		System.out.println("Result is ready for request with reqid " + request.getReqid());
 
 		DadkvsMain.CommitReply response = DadkvsMain.CommitReply.newBuilder()
-			.setReqid(reqid).setAck(result).build();
+			.setReqid(request.getReqid()).setAck(result).build();
 
 		responseObserver.onNext(response);
 		responseObserver.onCompleted();
