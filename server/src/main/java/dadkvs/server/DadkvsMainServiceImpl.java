@@ -39,7 +39,6 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
     public void committx(DadkvsMain.CommitRequest request, StreamObserver<DadkvsMain.CommitReply> responseObserver) {
 		// for debug purposes
 		System.out.println("Receiving commit request:" + request);
-
 		// Convert the request to the internal format
 		CommitRequest commitRequest = new CommitRequest(
 					request.getReqid(), request.getKey1(), request.getVersion1(),

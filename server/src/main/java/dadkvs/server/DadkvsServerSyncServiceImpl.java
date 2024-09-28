@@ -1,5 +1,8 @@
 package dadkvs.server;
 
+import com.google.rpc.context.AttributeContext;
+import dadkvs.DadkvsMain;
+import dadkvs.DadkvsMainServiceGrpc;
 import dadkvs.DadkvsServerSync;
 import dadkvs.DadkvsServerSyncServiceGrpc;
 import io.grpc.stub.StreamObserver;
@@ -21,8 +24,7 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
     DadkvsServerState   server_state;
 
     /** The sequence number of the request order. */
-    int                 sequence_number;
-
+    int sequence_number;
     public DadkvsServerSyncServiceImpl(DadkvsServerState state) {
         this.server_state = state;
         this.sequence_number = 0;
@@ -65,8 +67,20 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
         DadkvsServerSync.RequestOrder.Builder requestOrderBuilder = DadkvsServerSync.RequestOrder.newBuilder();
         requestOrderBuilder.addAllOrderedrequests(sequencedRequests);
 
+        DadkvsServerSync.RequestOrder requestOrder = requestOrderBuilder.build();
+
         ArrayList<DadkvsServerSync.Empty> responseList = new ArrayList<DadkvsServerSync.Empty>();
         GenericResponseCollector<DadkvsServerSync.Empty> responseCollector = new GenericResponseCollector<DadkvsServerSync.Empty>(responseList, 4);
-        // TODO: invoke the receiveReqOrder method of other replicas
+        int replica_port = server_state.base_port + 1;
+        String localhost = "localhost";
+        for(int i = 1; i < 5; i++) {
+            int port = replica_port + i;
+
+            ManagedChannel channel = ManagedChannelBuilder.forAddress(localhost, port).usePlaintext().build();
+            DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub stub = DadkvsServerSyncServiceGrpc.newStub(channel);
+            StreamObserver<DadkvsServerSync.RequestOrder> reqOrder_observer = new CollectorStreamObserver<>(responseCollector);
+            stub.receiveReqOrder(requestOrder, reqOrder_observer);
+
+        }
     }
 }
