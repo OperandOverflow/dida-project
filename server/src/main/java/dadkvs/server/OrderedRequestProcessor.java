@@ -12,7 +12,7 @@ import java.util.PriorityQueue;
  */
 public class OrderedRequestProcessor {
 
-    private DadkvsServerState   server_state;
+    final DadkvsServerState     server_state;
 
     /** The timestamp of when last write was done */
     private int                 timestamp;
@@ -42,7 +42,7 @@ public class OrderedRequestProcessor {
      */
     public VersionedValue read(ReadRequest request) {
         // For debug purposes
-        System.out.printf("Read request %d entered the queue", request.getReqid());
+        System.out.printf("Read request %d entered the queue\n", request.getReqid());
 
         // Check if the request is the next in the order
         DadkvsServerSync.SequencedRequest nextRequest;
@@ -51,7 +51,7 @@ public class OrderedRequestProcessor {
         }
         while (nextRequest == null || nextRequest.getRequestid() != request.getReqid()) {
             // For debug purposes
-            System.out.printf("Read request %d waiting", request.getReqid());
+            System.out.printf("Read request %d waiting\n", request.getReqid());
 
             // If not the next in the order, wait for the order to change
             waitForOrder();
@@ -72,7 +72,7 @@ public class OrderedRequestProcessor {
         notifyOrderChange();
 
         // For debug purposes
-        System.out.printf("Read request %d processed", request.getReqid());
+        System.out.printf("Read request %d processed\n", request.getReqid());
 
         return value;
     }
@@ -89,7 +89,7 @@ public class OrderedRequestProcessor {
 
     public boolean committx(CommitRequest request) {
         // For debug purposes
-        System.out.printf("Commit request %d entered the queue", request.getReqid());
+        System.out.printf("Commit request %d entered the queue\n", request.getReqid());
 
         // Check if the request is the next in the order
         DadkvsServerSync.SequencedRequest nextRequest;
@@ -98,7 +98,7 @@ public class OrderedRequestProcessor {
         }
         while (nextRequest == null || nextRequest.getRequestid() != request.getReqid()) {
             // For debug purposes
-            System.out.printf("Commit request %d waiting", request.getReqid());
+            System.out.printf("Commit request %d waiting\n", request.getReqid());
 
             // If not the next in the order, wait for the order to change
             waitForOrder();
@@ -119,7 +119,7 @@ public class OrderedRequestProcessor {
         notifyOrderChange();
 
         // For debug purposes
-        System.out.printf("Commit request %d processed", request.getReqid());
+        System.out.printf("Commit request %d processed\n", request.getReqid());
 
         return result;
     }
@@ -145,6 +145,7 @@ public class OrderedRequestProcessor {
     public void addReqOrderList(List<DadkvsServerSync.SequencedRequest> orderedRequests) {
         // Add the ordered requests to the order list
         synchronized (this.request_order) {
+            // TODO: verify if the request is already in the queue before adding
             this.request_order.addAll(orderedRequests);
         }
         notifyOrderChange();
