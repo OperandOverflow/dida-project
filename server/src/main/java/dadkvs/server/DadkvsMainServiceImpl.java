@@ -22,6 +22,9 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		// for debug purposes
 		System.out.println("Receiving read request:" + request);
 
+		if (this.server_state.i_am_leader)
+			this.server_state.sync_service.sendReqOrder(request.getReqid());
+
 		// Convert the request to the internal format
 		ReadRequest readRequest = new ReadRequest(request.getReqid(), request.getKey());
 
@@ -39,6 +42,10 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
     public void committx(DadkvsMain.CommitRequest request, StreamObserver<DadkvsMain.CommitReply> responseObserver) {
 		// for debug purposes
 		System.out.println("Receiving commit request:" + request);
+
+		if (this.server_state.i_am_leader)
+			this.server_state.sync_service.sendReqOrder(request.getReqid());
+
 		// Convert the request to the internal format
 		CommitRequest commitRequest = new CommitRequest(
 					request.getReqid(), request.getKey1(), request.getVersion1(),

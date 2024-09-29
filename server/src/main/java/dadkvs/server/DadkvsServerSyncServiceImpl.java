@@ -5,6 +5,7 @@ import dadkvs.DadkvsMain;
 import dadkvs.DadkvsMainServiceGrpc;
 import dadkvs.DadkvsServerSync;
 import dadkvs.DadkvsServerSyncServiceGrpc;
+import dadkvs.DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub;
 import io.grpc.stub.StreamObserver;
 
 import dadkvs.util.GenericResponseCollector;
@@ -21,13 +22,36 @@ import java.util.*;
  */
 public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceImplBase {
 
+
     DadkvsServerState   server_state;
 
     /** The sequence number of the request order. */
     int sequence_number;
+
+    /** Broadcast control variables */
+    private final int   n_servers = 5;
+    private ManagedChannel[] channels;
+    private DadkvsServerSyncServiceStub[] async_stubs;
+
     public DadkvsServerSyncServiceImpl(DadkvsServerState state) {
         this.server_state = state;
         this.sequence_number = 0;
+        initiate();
+    }
+
+    /**
+     * This method initializes the gRPC channels and stubs for
+     * the server-to-server communication.
+     */
+    private void initiate() {
+        this.channels = new ManagedChannel[n_servers];
+        this.async_stubs = new DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub[n_servers];
+        String localhost = "localhost";
+        for(int i = 0; i < n_servers; i++) {
+            int port = this.server_state.base_port + i;
+            this.channels[i] = ManagedChannelBuilder.forAddress(localhost, port).usePlaintext().build();
+            this.async_stubs[i] = DadkvsServerSyncServiceGrpc.newStub(this.channels[i]);
+        }
     }
 
     /**
@@ -53,6 +77,9 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
     /**
      * The leader sends the order of requests to other servers using
      * this method.
+     * This method will automatically assign a sequence number to the
+     * request and send it to all the servers.
+     * @param reqid The request id
      */
     public void sendReqOrder(int reqid) {
         this.sequence_number++;
@@ -61,26 +88,34 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
         DadkvsServerSync.SequencedRequest.Builder sequencedRequestBuilder = DadkvsServerSync.SequencedRequest.newBuilder();
         sequencedRequestBuilder.setRequestid(reqid).setRequestseq(this.sequence_number);
 
+        // Add the sequenced request to a list
         List<DadkvsServerSync.SequencedRequest> sequencedRequests = new ArrayList<DadkvsServerSync.SequencedRequest>();
         sequencedRequests.add(sequencedRequestBuilder.build());
 
+        // Create the request order and add the list of sequenced requests
         DadkvsServerSync.RequestOrder.Builder requestOrderBuilder = DadkvsServerSync.RequestOrder.newBuilder();
         requestOrderBuilder.addAllOrderedrequests(sequencedRequests);
 
         DadkvsServerSync.RequestOrder requestOrder = requestOrderBuilder.build();
 
+        // Create an empty list to collect the responses
         ArrayList<DadkvsServerSync.Empty> responseList = new ArrayList<DadkvsServerSync.Empty>();
-        GenericResponseCollector<DadkvsServerSync.Empty> responseCollector = new GenericResponseCollector<DadkvsServerSync.Empty>(responseList, 4);
-        int replica_port = server_state.base_port + 1;
-        String localhost = "localhost";
-        for(int i = 1; i < 5; i++) {
-            int port = replica_port + i;
+        GenericResponseCollector<DadkvsServerSync.Empty> responseCollector = new GenericResponseCollector<DadkvsServerSync.Empty>(responseList, n_servers);
 
-            ManagedChannel channel = ManagedChannelBuilder.forAddress(localhost, port).usePlaintext().build();
-            DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub stub = DadkvsServerSyncServiceGrpc.newStub(channel);
-            StreamObserver<DadkvsServerSync.RequestOrder> reqOrder_observer = new CollectorStreamObserver<>(responseCollector);
+        // Broadcast the order to all the servers
+        for (int i = 0; i < n_servers; i++) {
+            DadkvsServerSyncServiceStub stub = this.async_stubs[i];
+            StreamObserver<DadkvsServerSync.Empty> reqOrder_observer = new CollectorStreamObserver<>(responseCollector);
             stub.receiveReqOrder(requestOrder, reqOrder_observer);
+        }
 
+        // Wait for all the responses
+        // TODO: this may need to be changed to a timeout or to a majority
+        responseCollector.waitForTarget(n_servers);
+        if (responseList.size() >= n_servers) {
+            System.out.println("Request order sent to all servers");
+        } else {
+            System.out.println("Request order not sent to all servers");
         }
     }
 }

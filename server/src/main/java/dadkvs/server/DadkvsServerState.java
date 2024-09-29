@@ -11,6 +11,9 @@ public class DadkvsServerState {
     Thread         main_loop_worker;
     OrderedRequestProcessor ordered_request_processor;
 
+    // TODO: questionable choice to initialize this here
+    DadkvsServerSyncServiceImpl sync_service;
+
     
     public DadkvsServerState(int kv_size, int port, int myself) {
         base_port = port;
@@ -23,5 +26,6 @@ public class DadkvsServerState {
         main_loop_worker = new Thread (main_loop);
         main_loop_worker.start();
         ordered_request_processor = new OrderedRequestProcessor(this);
+        sync_service = new DadkvsServerSyncServiceImpl(this);
     }
 }
