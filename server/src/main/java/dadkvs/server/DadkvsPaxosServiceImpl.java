@@ -10,6 +10,7 @@ import dadkvs.DadkvsMain;
 import dadkvs.DadkvsPaxos;
 import dadkvs.DadkvsPaxosServiceGrpc;
 
+import dadkvs.DadkvsServerSyncServiceGrpc;
 import dadkvs.util.GenericResponseCollector;
 import dadkvs.util.CollectorStreamObserver;
 
@@ -21,11 +22,33 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
 
 
     DadkvsServerState server_state;
+
+    // TODO: we could put this in its own class?
+    /** Broadcast control variables */
+    private final int   n_servers = 5;
+    private ManagedChannel[] channels;
+    private DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub[] async_stubs;
     
     
     public DadkvsPaxosServiceImpl(DadkvsServerState state) {
 	this.server_state = state;
+    initiate();
 	
+    }
+
+    /**
+     * This method initializes the gRPC channels and stubs for
+     * the server-to-server communication.
+     */
+    private void initiate() {
+        this.channels = new ManagedChannel[n_servers];
+        this.async_stubs = new DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub[n_servers];
+        String localhost = "localhost";
+        for(int i = 0; i < n_servers; i++) {
+            int port = this.server_state.base_port + i;
+            this.channels[i] = ManagedChannelBuilder.forAddress(localhost, port).usePlaintext().build();
+            this.async_stubs[i] = DadkvsServerSyncServiceGrpc.newStub(this.channels[i]);
+        }
     }
     
 
@@ -33,6 +56,38 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
     public void phaseone(DadkvsPaxos.PhaseOneRequest request, StreamObserver<DadkvsPaxos.PhaseOneReply> responseObserver) {
 	// for debug purposes
 	System.out.println("Receive phase1 request: " + request);
+
+    // Extract details from the PhaseOneRequest
+    int phase1config = request.getPhase1Config(); //for next steps of the project
+    int phase1index = request.getPhase1Index();
+    int phase1timestamp = request.getPhase1Timestamp();
+
+    //variables for accepting
+    boolean accepted = false;
+    VersionedValue value = server_state.store.read(phase1index);
+    int lastVersion = value.getVersion();
+
+    // Checking if the PhaseOneRequest timestamp is higher than the already accepted timestamp
+    if(phase1timestamp > lastVersion){
+        accepted = true;
+
+        //setting the new timestamp and value and storing - this is the promise
+        value.setVersion(phase1timestamp);
+        server_state.store.write(phase1index, value);
+    }
+
+    //Creating the PhaseOneReply
+    DadkvsPaxos.PhaseOneReply reply = DadkvsPaxos.PhaseOneReply.newBuilder()
+            .setPhase1Config(phase1config)
+            .setPhase1Index(phase1index)
+            .setPhase1Timestamp(value.getVersion())
+            .setPhase1Accepted(accepted)
+            .setPhase1Value(value.getValue())
+            .build();
+
+
+    responseObserver.onNext(reply);
+    responseObserver.onCompleted();
 
     }
 
