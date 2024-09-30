@@ -95,7 +95,36 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
     public void phasetwo(DadkvsPaxos.PhaseTwoRequest request, StreamObserver<DadkvsPaxos.PhaseTwoReply> responseObserver) {
 	// for debug purposes
 	System.out.println ("Receive phase two request: " + request);
+    //Variables regarding the phaseTwoRequest
+    int requestKey = request.getPhase2Index();
+    int requestValue = request.getPhase2Value();
+    int requestTimestamp = request.getPhase2Timestamp();
 
+    //the last stored value
+    VersionedValue value = server_state.store.read(request.getPhase2Index());
+    //lastVersion -> timestamp
+    int lastVersion = value.getVersion();
+
+    boolean accepted = false;
+
+    if(requestTimestamp >= lastVersion){
+        accepted = true;
+
+        value.setVersion(requestTimestamp);
+        value.setVersion(lastVersion);
+        value.setValue(requestValue);
+        server_state.store.write(requestKey, value);
+    }
+
+
+    DadkvsPaxos.PhaseTwoReply reply = DadkvsPaxos.PhaseTwoReply.newBuilder()
+            .setPhase2Accepted(accepted)
+            .setPhase2Config(request.getPhase2Config())
+            .setPhase2Index(requestKey)
+            .build();
+
+    responseObserver.onNext(reply);
+    responseObserver.onCompleted();
     }
 
     @Override
