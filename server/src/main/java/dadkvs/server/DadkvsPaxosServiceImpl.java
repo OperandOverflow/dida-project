@@ -31,8 +31,8 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
     
     
     public DadkvsPaxosServiceImpl(DadkvsServerState state) {
-	this.server_state = state;
-    initiate();
+        this.server_state = state;
+        initiate();
 	
     }
 
@@ -57,37 +57,37 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
 	// for debug purposes
 	System.out.println("Receive phase1 request: " + request);
 
-    // Extract details from the PhaseOneRequest
-    int phase1config = request.getPhase1Config(); //for next steps of the project
-    int phase1index = request.getPhase1Index();
-    int phase1timestamp = request.getPhase1Timestamp();
+        // Extract details from the PhaseOneRequest
+        int phase1config = request.getPhase1Config(); //for next steps of the project
+        int phase1index = request.getPhase1Index();
+        int phase1timestamp = request.getPhase1Timestamp();
 
-    //variables for accepting
-    boolean accepted = false;
-    VersionedValue value = server_state.store.read(phase1index);
-    int lastVersion = value.getVersion();
+        //variables for accepting
+        boolean accepted = false;
+        VersionedValue value = server_state.store.read(phase1index);
+        int lastVersion = value.getVersion();
 
-    // Checking if the PhaseOneRequest timestamp is higher than the already accepted timestamp
-    if(phase1timestamp > lastVersion){
-        accepted = true;
+        // Checking if the PhaseOneRequest timestamp is higher than the already accepted timestamp
+        if(phase1timestamp > lastVersion){
+            accepted = true;
 
-        //setting the new timestamp and value and storing - this is the promise
-        value.setVersion(phase1timestamp);
-        server_state.store.write(phase1index, value);
-    }
+            //setting the new timestamp and value and storing - this is the promise
+            value.setVersion(phase1timestamp);
+            server_state.store.write(phase1index, value);
+        }
 
-    //Creating the PhaseOneReply
-    DadkvsPaxos.PhaseOneReply reply = DadkvsPaxos.PhaseOneReply.newBuilder()
-            .setPhase1Config(phase1config)
-            .setPhase1Index(phase1index)
-            .setPhase1Timestamp(value.getVersion())
-            .setPhase1Accepted(accepted)
-            .setPhase1Value(value.getValue())
-            .build();
+        //Creating the PhaseOneReply
+        DadkvsPaxos.PhaseOneReply reply = DadkvsPaxos.PhaseOneReply.newBuilder()
+                .setPhase1Config(phase1config)
+                .setPhase1Index(phase1index)
+                .setPhase1Timestamp(value.getVersion())
+                .setPhase1Accepted(accepted)
+                .setPhase1Value(value.getValue())
+                .build();
 
 
-    responseObserver.onNext(reply);
-    responseObserver.onCompleted();
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
 
     }
 
