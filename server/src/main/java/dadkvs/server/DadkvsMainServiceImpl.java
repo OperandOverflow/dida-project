@@ -66,7 +66,7 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		// for debug purposes
 		System.out.println("Receiving commit request:" + request);
 		if (this.server_state.i_am_leader){
-			doPaxos(request);
+			//doPaxos(request);
 		}else{
 			System.out.println("I'm not the leader, cannot process requests");
 		}
@@ -91,51 +91,51 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		responseObserver.onCompleted();
     }
 
-	public void doPaxos(DadkvsMain.CommitRequest request){
-		//Incrementing the local timestamp
-		int phase1Timestamp = this.timestamp++;
-
-		//TODO: Which is the key that gets to be written on
-		//TODO: What do we do about configs at this point?
-		if(this.server_state.my_id!= 0){
-			DadkvsPaxos.PhaseOneRequest phaseOneRequest = DadkvsPaxos.PhaseOneRequest.newBuilder()
-					.setPhase1Config(0)
-					.setPhase1Index(request.getKey1())
-					.setPhase1Timestamp(phase1Timestamp)
-					.build();
-
-			//Preparing to accept the phase one replies
-			List<DadkvsPaxos.PhaseOneReply> phaseOneReplies = new ArrayList<>();
-			//this is like a synchronized for Integers
-			AtomicInteger replicas_accepts = new AtomicInteger(0);
-			AtomicInteger replicas_reject = new AtomicInteger(0);
-			int majority = (n_servers / 2) + 1;
-
-
-			//Sending the phase one requests
-			for(DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub stub: this.async_stubs){
-				// TODO: Should we just use an empty StreamObserver?
-				stub.phaseone(phaseOneRequest, new StreamObserver<DadkvsPaxos.PhaseOneReply>() {
-					@Override
-					public void onNext(DadkvsPaxos.PhaseOneReply phaseOneReply) {
-						if(phaseOneReply.getPhase1Accepted()) {
-							replicas_accepts.incrementAndGet();
-							phaseOneReplies.add(phaseOneReply);
-						}
-					}
-					@Override
-					public void onError(Throwable throwable) {}
-					@Override
-					public void onCompleted() {}
-				});
-			}
-
-			//Check for majority
-			if(replicas_accepts >= majority){
-				//TODO : Phase Two
-			}
-
-		}
-
-	}
+//	public void doPaxos(DadkvsMain.CommitRequest request){
+//		//Incrementing the local timestamp
+//		int phase1Timestamp = this.timestamp++;
+//
+//		//TODO: Which is the key that gets to be written on
+//		//TODO: What do we do about configs at this point?
+//		if(this.server_state.my_id!= 0){
+//			DadkvsPaxos.PhaseOneRequest phaseOneRequest = DadkvsPaxos.PhaseOneRequest.newBuilder()
+//					.setPhase1Config(0)
+//					.setPhase1Index(request.getKey1())
+//					.setPhase1Timestamp(phase1Timestamp)
+//					.build();
+//
+//			//Preparing to accept the phase one replies
+//			List<DadkvsPaxos.PhaseOneReply> phaseOneReplies = new ArrayList<>();
+//			//this is like a synchronized for Integers
+//			AtomicInteger replicas_accepts = new AtomicInteger(0);
+//			AtomicInteger replicas_reject = new AtomicInteger(0);
+//			int majority = (n_servers / 2) + 1;
+//
+//
+//			//Sending the phase one requests
+//			for(DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub stub: this.async_stubs){
+//				// TODO: Should we just use an empty StreamObserver?
+//				stub.phaseone(phaseOneRequest, new StreamObserver<DadkvsPaxos.PhaseOneReply>() {
+//					@Override
+//					public void onNext(DadkvsPaxos.PhaseOneReply phaseOneReply) {
+//						if(phaseOneReply.getPhase1Accepted()) {
+//							replicas_accepts.incrementAndGet();
+//							phaseOneReplies.add(phaseOneReply);
+//						}
+//					}
+//					@Override
+//					public void onError(Throwable throwable) {}
+//					@Override
+//					public void onCompleted() {}
+//				});
+//			}
+//
+//			//Check for majority
+//			if(replicas_accepts >= majority){
+//				//TODO : Phase Two
+//			}
+//
+//		}
+//
+//	}
 }
