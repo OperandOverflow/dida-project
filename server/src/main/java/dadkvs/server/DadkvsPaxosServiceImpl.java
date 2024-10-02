@@ -93,84 +93,75 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
 
     }
 
-//    @Override
-//    public void phasetwo(DadkvsPaxos.PhaseTwoRequest request, StreamObserver<DadkvsPaxos.PhaseTwoReply> responseObserver) {
-//	// for debug purposes
-//	System.out.println ("Receive phase two request: " + request);
-//        //Variables regarding the phaseTwoRequest
-//        int requestKey = request.getPhase2Index();
-//        DadkvsPaxos.PaxosValue requestValue = request.getPhase2Value();
-//        int requestTimestamp = request.getPhase2Timestamp();
-//
-//        //the last stored value
-//        VersionedValue value = server_state.store.read(request.getPhase2Index());
-//        //lastVersion -> timestamp
-//        int lastVersion = value.getVersion();
-//
-//        boolean accepted = false;
-//
-//        if(requestTimestamp >= lastVersion){
-//            accepted = true;
-//
-//            value.setVersion(requestTimestamp);
-//            value.setVersion(lastVersion);
-//            value.setValue(requestValue);
-//            server_state.store.write(requestKey, value);
-//        }
-//
-//
-//        DadkvsPaxos.PhaseTwoReply reply = DadkvsPaxos.PhaseTwoReply.newBuilder()
-//                .setPhase2Accepted(accepted)
-//                .setPhase2Config(request.getPhase2Config())
-//                .setPhase2Index(requestKey)
-//                .build();
-//
-//        responseObserver.onNext(reply);
-//        responseObserver.onCompleted();
-//    }
+    @Override
+    public void phasetwo(DadkvsPaxos.PhaseTwoRequest request, StreamObserver<DadkvsPaxos.PhaseTwoReply> responseObserver) {
+	    // for debug purposes
+	    System.out.println ("Receive phase two request: " + request);
+
+        //Variables regarding the phaseTwoRequest
+        int phase2config = request.getPhase2Config();
+        int phase2index = request.getPhase2Index();
+        DadkvsPaxos.PaxosValue phase2value = request.getPhase2Value();
+        int phase2timestamp = request.getPhase2Timestamp();
+
+        DadkvsPaxos.PhaseTwoReply reply;
+
+        if (phase2timestamp < lastTimestamp) {
+            reply = DadkvsPaxos.PhaseTwoReply.newBuilder()
+                    .setPhase2Accepted(false)
+                    .setPhase2Config(request.getPhase2Config())
+                    .setPhase2Index(phase2index)
+                    .build();
+        } else {
+            reply = DadkvsPaxos.PhaseTwoReply.newBuilder()
+                    .setPhase2Accepted(true)
+                    .setPhase2Config(request.getPhase2Config())
+                    .setPhase2Index(phase2index)
+                    .build();
+        }
+
+        // TODO: invoke the learn method of all replicas
+
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
+    }
 
 
     @Override
     public void learn(DadkvsPaxos.LearnRequest request, StreamObserver<DadkvsPaxos.LearnReply> responseObserver) {
 
-        System.out.println("Receive learn request: " + request);
-
         // for debug purposes
+        System.out.println("Receive learn request: " + request);
 
         int learnIndex = request.getLearnindex();
         int learnValue = request.getLearnvalue();
         int learnTimestamp = request.getLearntimestamp();
 
 
-         // Retrieve the current value from the server's state for the given index
-    VersionedValue currentValue = server_state.store.read(learnIndex);
-    int currentVersion = currentValue.getVersion();
+        // Retrieve the current value from the server's state for the given index
+        VersionedValue currentValue = server_state.store.read(learnIndex);
+        int currentVersion = currentValue.getVersion();
 
-    // Store the learned value only if the timestamp is newer
-    boolean learned = false;
-    if (learnTimestamp >= currentVersion) {
-        currentValue.setVersion(learnTimestamp);
-        currentValue.setValue(learnValue);
-        server_state.store.write(learnIndex, currentValue);
-        learned = true;
-    }
+        // Store the learned value only if the timestamp is newer
+        boolean learned = false;
+        if (learnTimestamp >= currentVersion) {
+            currentValue.setVersion(learnTimestamp);
+            currentValue.setValue(learnValue);
+            server_state.store.write(learnIndex, currentValue);
+            learned = true;
+        }
 
-    // Create the LearnReply
-    DadkvsPaxos.LearnReply reply = DadkvsPaxos.LearnReply.newBuilder().setLearnaccepted(learned)
+        // Create the LearnReply
+        DadkvsPaxos.LearnReply reply = DadkvsPaxos.LearnReply.newBuilder().setLearnaccepted(learned)
 
-            .setLearnindex(learnIndex)
-            .setLearnaccepted(learned)
-            .setLearnconfig(learnValue)
-            .build();
+                .setLearnindex(learnIndex)
+                .setLearnaccepted(learned)
+                .setLearnconfig(learnValue)
+                .build();
 
-    // Send the response
-    responseObserver.onNext(reply);
-    responseObserver.onCompleted();
-
-
-
-
-
+        // Send the response
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
     }
 
 }
