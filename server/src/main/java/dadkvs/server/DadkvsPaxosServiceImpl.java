@@ -27,13 +27,20 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
     /** Broadcast control variables */
     private final int   n_servers = 5;
     private ManagedChannel[] channels;
-    private DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub[] async_stubs;
-    
-    
+    private DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] async_stubs;
+
+    private int lastTimestamp;
+
+    private int acceptedTimestamp;
+    private DadkvsPaxos.PaxosValue acceptedValue;
+
+
     public DadkvsPaxosServiceImpl(DadkvsServerState state) {
         this.server_state = state;
+        this.lastTimestamp = -1;
+        this.acceptedTimestamp = -1;
+        this.acceptedValue = null;
         initiate();
-	
     }
 
     /**
@@ -42,97 +49,92 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
      */
     private void initiate() {
         this.channels = new ManagedChannel[n_servers];
-        this.async_stubs = new DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub[n_servers];
+        this.async_stubs = new DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[n_servers];
         String localhost = "localhost";
         for(int i = 0; i < n_servers; i++) {
             int port = this.server_state.base_port + i;
             this.channels[i] = ManagedChannelBuilder.forAddress(localhost, port).usePlaintext().build();
-            this.async_stubs[i] = DadkvsServerSyncServiceGrpc.newStub(this.channels[i]);
+            this.async_stubs[i] = DadkvsPaxosServiceGrpc.newStub(this.channels[i]);
         }
     }
-    
+
 
     @Override
     public void phaseone(DadkvsPaxos.PhaseOneRequest request, StreamObserver<DadkvsPaxos.PhaseOneReply> responseObserver) {
-	// for debug purposes
-	System.out.println("Receive phase1 request: " + request);
+	    // for debug purposes
+	    System.out.println("Receive phase1 request: " + request);
 
         // Extract details from the PhaseOneRequest
         int phase1config = request.getPhase1Config(); //for next steps of the project
         int phase1index = request.getPhase1Index();
         int phase1timestamp = request.getPhase1Timestamp();
 
-        //variables for accepting
-        boolean accepted = false;
-        VersionedValue value = server_state.store.read(phase1index);
-        int lastVersion = value.getVersion();
+        DadkvsPaxos.PhaseOneReply reply;
 
-        // Checking if the PhaseOneRequest timestamp is higher than the already accepted timestamp
-        if(phase1timestamp > lastVersion){
-            accepted = true;
-
-            //setting the new timestamp and value and storing - this is the promise
-            value.setVersion(phase1timestamp);
-            server_state.store.write(phase1index, value);
+        if (phase1timestamp < lastTimestamp) {
+            reply = DadkvsPaxos.PhaseOneReply.newBuilder()
+                    .setPhase1Config(phase1config)
+                    .setPhase1Index(phase1index)
+                    .setPhase1Accepted(false)
+                    .build();
+        } else {
+            lastTimestamp = phase1timestamp;
+            reply = DadkvsPaxos.PhaseOneReply.newBuilder()
+                    .setPhase1Config(phase1config)
+                    .setPhase1Index(phase1index)
+                    .setPhase1Timestamp(acceptedTimestamp)
+                    .setPhase1Accepted(true)
+                    .setPhase1Value(acceptedValue)
+                    .build();
         }
-
-        //Creating the PhaseOneReply
-        DadkvsPaxos.PhaseOneReply reply = DadkvsPaxos.PhaseOneReply.newBuilder()
-                .setPhase1Config(phase1config)
-                .setPhase1Index(phase1index)
-                .setPhase1Timestamp(value.getVersion())
-                .setPhase1Accepted(accepted)
-                .setPhase1Value(value.getValue())
-                .build();
-
 
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
 
     }
 
-    @Override
-    public void phasetwo(DadkvsPaxos.PhaseTwoRequest request, StreamObserver<DadkvsPaxos.PhaseTwoReply> responseObserver) {
-	// for debug purposes
-	System.out.println ("Receive phase two request: " + request);
-        //Variables regarding the phaseTwoRequest
-        int requestKey = request.getPhase2Index();
-        int requestValue = request.getPhase2Value();
-        int requestTimestamp = request.getPhase2Timestamp();
-
-        //the last stored value
-        VersionedValue value = server_state.store.read(request.getPhase2Index());
-        //lastVersion -> timestamp
-        int lastVersion = value.getVersion();
-
-        boolean accepted = false;
-
-        if(requestTimestamp >= lastVersion){
-            accepted = true;
-
-            value.setVersion(requestTimestamp);
-            value.setVersion(lastVersion);
-            value.setValue(requestValue);
-            server_state.store.write(requestKey, value);
-        }
-
-
-        DadkvsPaxos.PhaseTwoReply reply = DadkvsPaxos.PhaseTwoReply.newBuilder()
-                .setPhase2Accepted(accepted)
-                .setPhase2Config(request.getPhase2Config())
-                .setPhase2Index(requestKey)
-                .build();
-
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
-    }
+//    @Override
+//    public void phasetwo(DadkvsPaxos.PhaseTwoRequest request, StreamObserver<DadkvsPaxos.PhaseTwoReply> responseObserver) {
+//	// for debug purposes
+//	System.out.println ("Receive phase two request: " + request);
+//        //Variables regarding the phaseTwoRequest
+//        int requestKey = request.getPhase2Index();
+//        DadkvsPaxos.PaxosValue requestValue = request.getPhase2Value();
+//        int requestTimestamp = request.getPhase2Timestamp();
+//
+//        //the last stored value
+//        VersionedValue value = server_state.store.read(request.getPhase2Index());
+//        //lastVersion -> timestamp
+//        int lastVersion = value.getVersion();
+//
+//        boolean accepted = false;
+//
+//        if(requestTimestamp >= lastVersion){
+//            accepted = true;
+//
+//            value.setVersion(requestTimestamp);
+//            value.setVersion(lastVersion);
+//            value.setValue(requestValue);
+//            server_state.store.write(requestKey, value);
+//        }
+//
+//
+//        DadkvsPaxos.PhaseTwoReply reply = DadkvsPaxos.PhaseTwoReply.newBuilder()
+//                .setPhase2Accepted(accepted)
+//                .setPhase2Config(request.getPhase2Config())
+//                .setPhase2Index(requestKey)
+//                .build();
+//
+//        responseObserver.onNext(reply);
+//        responseObserver.onCompleted();
+//    }
 
 
     @Override
     public void learn(DadkvsPaxos.LearnRequest request, StreamObserver<DadkvsPaxos.LearnReply> responseObserver) {
-	
+
         System.out.println("Receive learn request: " + request);
-    
+
         // for debug purposes
 
         int learnIndex = request.getLearnindex();
@@ -155,7 +157,7 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
 
     // Create the LearnReply
     DadkvsPaxos.LearnReply reply = DadkvsPaxos.LearnReply.newBuilder().setLearnaccepted(learned)
-          
+
             .setLearnindex(learnIndex)
             .setLearnaccepted(learned)
             .setLearnconfig(learnValue)
@@ -167,7 +169,7 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
 
 
 
-	
+
 
     }
 
