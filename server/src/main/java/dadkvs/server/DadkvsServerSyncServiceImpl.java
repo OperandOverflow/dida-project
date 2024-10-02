@@ -1,10 +1,7 @@
 package dadkvs.server;
 
 import com.google.rpc.context.AttributeContext;
-import dadkvs.DadkvsMain;
-import dadkvs.DadkvsMainServiceGrpc;
-import dadkvs.DadkvsServerSync;
-import dadkvs.DadkvsServerSyncServiceGrpc;
+import dadkvs.*;
 import dadkvs.DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub;
 import io.grpc.stub.StreamObserver;
 
@@ -15,6 +12,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class implements the gRPC service for the server-to-server
@@ -31,7 +29,8 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
     /** Broadcast control variables */
     private final int   n_servers = 5;
     private ManagedChannel[] channels;
-    private DadkvsServerSyncServiceStub[] async_stubs;
+    private DadkvsServerSyncServiceStub[] async_server_sync_stubs;
+    private DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_server_sync_stub;
 
     public DadkvsServerSyncServiceImpl(DadkvsServerState state) {
         this.server_state = state;
@@ -45,12 +44,16 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
      */
     private void initiate() {
         this.channels = new ManagedChannel[n_servers];
-        this.async_stubs = new DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub[n_servers];
+        this.async_server_sync_stubs = new DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub[n_servers];
+        this.paxos_server_sync_stub = new DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[n_servers];
         String localhost = "localhost";
+
+
         for(int i = 0; i < n_servers; i++) {
             int port = this.server_state.base_port + i;
             this.channels[i] = ManagedChannelBuilder.forAddress(localhost, port).usePlaintext().build();
-            this.async_stubs[i] = DadkvsServerSyncServiceGrpc.newStub(this.channels[i]);
+            this.async_server_sync_stubs[i] = DadkvsServerSyncServiceGrpc.newStub(this.channels[i]); //Server sync stubs
+            this.paxos_server_sync_stub[i] = DadkvsPaxosServiceGrpc.newStub(this.channels[i]); //Paxos stubs
         }
     }
 
@@ -98,13 +101,17 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
 
         DadkvsServerSync.RequestOrder requestOrder = requestOrderBuilder.build();
 
+        doPaxos(reqid, this.sequence_number);
+
         // Create an empty list to collect the responses
         ArrayList<DadkvsServerSync.Empty> responseList = new ArrayList<DadkvsServerSync.Empty>();
         GenericResponseCollector<DadkvsServerSync.Empty> responseCollector = new GenericResponseCollector<DadkvsServerSync.Empty>(responseList, n_servers);
 
+
+
         // Broadcast the order to all the servers
         for (int i = 0; i < n_servers; i++) {
-            DadkvsServerSyncServiceStub stub = this.async_stubs[i];
+            DadkvsServerSyncServiceStub stub = this.async_server_sync_stubs[i];
             StreamObserver<DadkvsServerSync.Empty> reqOrder_observer = new CollectorStreamObserver<>(responseCollector);
             stub.receiveReqOrder(requestOrder, reqOrder_observer);
         }
@@ -118,4 +125,46 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
             System.out.println("Request order not sent to all servers");
         }
     }
+
+
+    public boolean doPaxos(int request_id, int sequence_number){
+        //Phase 1 - to make sure the timestamp value we have is the same as the last timestamp from
+        //the other replicas.
+		if(this.server_state.my_id!= 0) {
+            DadkvsPaxos.PhaseOneRequest phaseOneRequest = DadkvsPaxos.PhaseOneRequest.newBuilder()
+                    .setPhase1Config(0)
+                    .setPhase1Index(sequence_number) //paxos round
+                    .setPhase1Timestamp(this.server_state.my_id) //leader
+                    .build();
+
+            //Preparing to accept the phase one replies
+            List<DadkvsPaxos.PhaseOneReply> phaseOneReplies = new ArrayList<>();
+            //this is like a synchronized for Integers
+            AtomicInteger replicas_accepts = new AtomicInteger(0);
+            AtomicInteger replicas_reject = new AtomicInteger(0);
+            int majority = (n_servers / 2) + 1;
+
+
+            //Sending the phase one requests
+            for (DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub stub : this.paxos_server_sync_stub) {
+                stub.phaseone(phaseOneRequest, new StreamObserver<DadkvsPaxos.PhaseOneReply>() {
+                    @Override
+                    public void onNext(DadkvsPaxos.PhaseOneReply phaseOneReply) {
+                        if (phaseOneReply.getPhase1Accepted()) {
+                            replicas_accepts.incrementAndGet();
+                            phaseOneReplies.add(phaseOneReply);
+                        }
+                    }
+                    @Override
+                    public void onError(Throwable throwable) {
+                    }
+                    @Override
+                    public void onCompleted() {
+                    }
+                });
+            }
+        }
+
+
+	}
 }
