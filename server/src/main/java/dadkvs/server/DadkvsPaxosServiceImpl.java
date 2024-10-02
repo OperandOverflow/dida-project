@@ -179,7 +179,9 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
         DadkvsPaxos.LearnReply reply = DadkvsPaxos.LearnReply.newBuilder()
         .setLearnaccepted(true) 
         .setLearnconfig(learnConfig)
+        .setLearnindex(learnIndex)
         .build();
+
 
         System.out.println("Learned value for index " + learnIndex + ": " + learnValue);
 
