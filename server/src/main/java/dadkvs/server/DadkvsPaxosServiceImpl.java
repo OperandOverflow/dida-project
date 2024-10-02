@@ -126,39 +126,49 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
     }
-    /** 
-     * @param request
-     * @param responseObserver
-     */
+
+
     @Override
     public void learn(DadkvsPaxos.LearnRequest request, StreamObserver<DadkvsPaxos.LearnReply> responseObserver) {
 	
         System.out.println("Receive learn request: " + request);
     
+        // for debug purposes
+
         int learnIndex = request.getLearnindex();
-        int learnValue = request.getLearnvalue();  
-           
-        VersionedValue currentValue = server_state.store.read(learnIndex);
-           
-           
+        int learnValue = request.getLearnvalue();
+        int learnTimestamp = request.getLearntimestamp();
+
+
+         // Retrieve the current value from the server's state for the given index
+    VersionedValue currentValue = server_state.store.read(learnIndex);
+    int currentVersion = currentValue.getVersion();
+
+    // Store the learned value only if the timestamp is newer
+    boolean learned = false;
+    if (learnTimestamp >= currentVersion) {
+        currentValue.setVersion(learnTimestamp);
         currentValue.setValue(learnValue);
         server_state.store.write(learnIndex, currentValue);
-   
-        
-        // Create the LearnReply
-        DadkvsPaxos.LearnReply reply = DadkvsPaxos.LearnReply.newBuilder()
-                .setLearnindex(learnIndex)
-                .setLearnconfig(learnValue)
-                .build();
-
-        // Send the response
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
+        learned = true;
     }
 
-    
+    // Create the LearnReply
+    DadkvsPaxos.LearnReply reply = DadkvsPaxos.LearnReply.newBuilder().setLearnaccepted(learned)
+          
+            .setLearnindex(learnIndex)
+            .setLearnaccepted(learned)
+            .setLearnconfig(learnValue)
+            .build();
+
+    // Send the response
+    responseObserver.onNext(reply);
+    responseObserver.onCompleted();
 
 
-     
+
+	
+
+    }
 
 }
