@@ -26,6 +26,9 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
     /** The sequence number of the request order. */
     int sequence_number;
 
+    /** The paxos round number */
+    int paxos_round;
+
     /** Broadcast control variables */
     private final int   n_servers = 5;
     private ManagedChannel[] channels;
@@ -165,6 +168,7 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
             }
         }
 
-
+        // TODO: change this later
+        return true;
 	}
 }
