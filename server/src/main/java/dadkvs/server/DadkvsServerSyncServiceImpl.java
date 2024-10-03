@@ -38,6 +38,7 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
     public DadkvsServerSyncServiceImpl(DadkvsServerState state) {
         this.server_state = state;
         this.sequence_number = 0;
+        this.paxos_round = 0;
         initiate();
     }
 
@@ -131,21 +132,23 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
 
 
     public boolean doPaxos(int request_id, int sequence_number){
+
+        int majority = (n_servers / 2) + 1;
+        //---------------------Phase 1 -------------------------//
+
         //Phase 1 - to make sure the timestamp value we have is the same as the last timestamp from
-        //the other replicas.
+        //the other replicas
 		if(this.server_state.my_id!= 0) {
             DadkvsPaxos.PhaseOneRequest phaseOneRequest = DadkvsPaxos.PhaseOneRequest.newBuilder()
                     .setPhase1Config(0)
-                    .setPhase1Index(sequence_number) //paxos round
+                    .setPhase1Index(this.paxos_round) //paxos round
                     .setPhase1Timestamp(this.server_state.my_id) //leader
                     .build();
 
             //Preparing to accept the phase one replies
             List<DadkvsPaxos.PhaseOneReply> phaseOneReplies = new ArrayList<>();
             //this is like a synchronized for Integers
-            AtomicInteger replicas_accepts = new AtomicInteger(0);
-            AtomicInteger replicas_reject = new AtomicInteger(0);
-            int majority = (n_servers / 2) + 1;
+            AtomicInteger replicas_phase1_accepts = new AtomicInteger(0);
 
 
             //Sending the phase one requests
@@ -154,21 +157,74 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
                     @Override
                     public void onNext(DadkvsPaxos.PhaseOneReply phaseOneReply) {
                         if (phaseOneReply.getPhase1Accepted()) {
-                            replicas_accepts.incrementAndGet();
+                            replicas_phase1_accepts.incrementAndGet();
                             phaseOneReplies.add(phaseOneReply);
                         }
                     }
                     @Override
-                    public void onError(Throwable throwable) {
-                    }
+                    public void onError(Throwable throwable) {}
                     @Override
-                    public void onCompleted() {
-                    }
+                    public void onCompleted() {}
                 });
+            }
+
+            //phase 1 results
+            if((replicas_phase1_accepts.get() >= majority)){
+                // TODO: Take the timestamp value decided from the replicas
+                // Find the highest timestamp from the PhaseOneReply objects in phaseOneReplies
+                int maxTimestamp = phaseOneReplies.stream()
+                        .mapToInt(DadkvsPaxos.PhaseOneReply::getPhase1Timestamp)
+                        .max()
+                        .orElse(this.sequence_number);
+
+                if(maxTimestamp > this.sequence_number)
+                    this.sequence_number = maxTimestamp; //check if the timestamp is more recent than ours
             }
         }
 
-        // TODO: change this later
-        return true;
+        //----------------------------Phase 2----------------------------------//
+
+
+        //building phase2 requests
+        DadkvsPaxos.PhaseTwoRequest phaseTwoRequest = DadkvsPaxos.PhaseTwoRequest.newBuilder()
+                .setPhase2Config(0)
+                .setPhase2Index(this.paxos_round) //paxos round
+                .setPhase2Timestamp(this.server_state.my_id) //lider id
+                .setPhase2Value(this.sequence_number) //the proposed order
+                .build();
+
+
+        //preparing phase 2 replies
+        List<DadkvsPaxos.PhaseTwoReply> phaseTwoReplies = new ArrayList<>();
+        AtomicInteger replicas_phase2_accepts = new AtomicInteger(0);
+
+
+        // Send Phase 2 requests
+        for (DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub stub : this.paxos_server_sync_stub) {
+            stub.phasetwo(phaseTwoRequest, new StreamObserver<DadkvsPaxos.PhaseTwoReply>() {
+                @Override
+                public void onNext(DadkvsPaxos.PhaseTwoReply phaseTwoReply) {
+                    if (phaseTwoReply.getPhase2Accepted()) {
+                        replicas_phase2_accepts.incrementAndGet();
+                        phaseTwoReplies.add(phaseTwoReply);
+                    }
+                }
+                @Override
+                public void onError(Throwable throwable) {}
+                @Override
+                public void onCompleted() {}
+            });
+        }
+        // Wait for Phase 2 majority decision
+        if (replicas_phase2_accepts.get() >= majority) {
+            System.out.println("Phase 2 succeeded with majority acceptance.");
+            // Consensus has been reached, Paxos is successful
+            return true;
+        } else {
+            System.out.println("Phase 2 failed, majority did not accept.");
+            // Consensus could not be reached
+            return false;
+        }
+
 	}
 }
