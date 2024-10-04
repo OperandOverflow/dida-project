@@ -1,23 +1,35 @@
 package dadkvs.server.requests;
 
+/**
+ * This class represent an ordered request by a sequence number
+ */
 public class OrdedRequest {
 
-    private int reqid;
-    private int requestSeq;
+    /**
+     * The sequence number of the request
+     */
+    public int sequenceNumber;
 
+    /**
+     * The request
+     */
+    public int requestId;
 
-    public OrdedRequest(int reqid, int requestSeq) {
-        super();
-        this.reqid = reqid;
-        this.requestSeq = requestSeq;
+    public OrdedRequest() {
+        this.sequenceNumber = -1;
+        this.requestId = -1;
     }
 
+    public OrdedRequest(int requestSeq, int requestId) {
+        this.sequenceNumber = requestSeq;
+        this.requestId = requestId;
+    }
 
     public int getRequestSeq() {
-        return reqid;
+        return sequenceNumber;
     }
 
     public int getRequestId() {
-        return requestSeq;
+        return requestId;
     }
 }
