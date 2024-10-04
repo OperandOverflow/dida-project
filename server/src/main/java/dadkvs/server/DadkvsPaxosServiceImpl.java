@@ -60,8 +60,9 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
         int phase1config = request.getPhase1Config(); //for next steps of the project
         int phase1index = request.getPhase1Index();
         int phase1timestamp = request.getPhase1Timestamp();
+        int phase1transactionNumber = request.getPhase1Txid();
 
-        PrepareMsg prepareMsg = new PrepareMsg(phase1index, phase1timestamp, phase1config);
+        PrepareMsg prepareMsg = new PrepareMsg(phase1timestamp, phase1index, phase1config, phase1transactionNumber);
 
         PromiseMsg promiseMsg = server_state.paxos.prepare(prepareMsg);
 
@@ -80,8 +81,8 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
 
         DadkvsPaxos.PhaseOneReply reply = DadkvsPaxos.PhaseOneReply.newBuilder()
                                                     .setPhase1Config(promiseMsg.configNumber)
-                                                    .setPhase1Index(promiseMsg.prevAcceptedRoundNumber)
-                                                    .setPhase1Timestamp(promiseMsg.leaderId)
+                                                    .setPhase1Index(promiseMsg.leaderId)
+                                                    .setPhase1Timestamp(promiseMsg.prevAcceptedRoundNumber)
                                                     .setPhase1Accepted(promiseMsg.accepted)
                                                     .setPhase1Value(acceptedValue)
                                                     .build();
@@ -101,11 +102,12 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
         int phase2index = request.getPhase2Index();
         DadkvsPaxos.PaxosValue phase2value = request.getPhase2Value();
         int phase2timestamp = request.getPhase2Timestamp();
+        int phase2transactionNumber = request.getPhase2Txid();
 
         OrdedRequest ordedRequest = new OrdedRequest(phase2value.getRequestseq(), phase2value.getRequestid());
         dadkvs.server.paxos.PaxosValue acceptValue = new dadkvs.server.paxos.PaxosValue(ordedRequest);
 
-        AcceptMsg acceptMsg = new AcceptMsg(phase2index, phase2timestamp, phase2config, acceptValue);
+        AcceptMsg acceptMsg = new AcceptMsg(phase2timestamp, phase2index, phase2config, acceptValue, phase2transactionNumber);
 
         AcceptedMsg acceptedMsg = server_state.paxos.accept(acceptMsg);
 
@@ -114,25 +116,6 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
                                                     .setPhase2Config(phase2config)
                                                     .setPhase2Index(phase2index)
                                                     .build();
-
-        if (acceptedMsg.accepted) {
-            // Tell all the learners about the accepted value
-            DadkvsPaxos.LearnRequest learnRequest = DadkvsPaxos.LearnRequest.newBuilder()
-                    .setLearnconfig(phase2config)
-                    .setLearnindex(phase2index)
-                    .setLearnvalue(phase2value)
-                    .setLearntimestamp(phase2timestamp)
-                    .build();
-
-            ArrayList<DadkvsPaxos.LearnReply> responseList = new ArrayList<>();
-            GenericResponseCollector<DadkvsPaxos.LearnReply> responseCollector = new GenericResponseCollector<>(responseList, server_state.n_servers);
-
-            for (int i = 0; i < server_state.n_servers; i++) {
-                DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub stub = server_state.rpc_stubs.paxos_stubs[i];
-                StreamObserver<DadkvsPaxos.LearnReply> learnObserver = new CollectorStreamObserver<>(responseCollector);
-                stub.learn(learnRequest, learnObserver);
-            }
-        }
 
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
@@ -149,18 +132,19 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
         int learnIndex = request.getLearnindex();
         int learnTimestamp = request.getLearntimestamp();
         DadkvsPaxos.PaxosValue learnValue = request.getLearnvalue();
+        int learnTransactionNumber = request.getLearntxid();
 
-        OrdedRequest ordedRequest = new OrdedRequest(learnValue.getRequestid(), learnValue.getRequestseq());
+        OrdedRequest ordedRequest = new OrdedRequest(learnValue.getRequestseq(), learnValue.getRequestid());
         dadkvs.server.paxos.PaxosValue acceptValue = new dadkvs.server.paxos.PaxosValue(ordedRequest);
 
-        LearnMsg learnMsg = new LearnMsg(learnIndex, learnTimestamp, learnConfig, acceptValue);
+        LearnMsg learnMsg = new LearnMsg(learnTimestamp, learnIndex, learnConfig, acceptValue, learnTransactionNumber);
 
         LearnedMsg learnedMsg = server_state.paxos.learn(learnMsg);
 
         DadkvsPaxos.LearnReply reply = DadkvsPaxos.LearnReply.newBuilder()
                                                 .setLearnaccepted(learnedMsg.accepted)
                                                 .setLearnconfig(learnMsg.configNumber)
-                                                .setLearnindex(learnMsg.roundNumber)
+                                                .setLearnindex(learnMsg.leaderId)
                                                 .build();
 
 

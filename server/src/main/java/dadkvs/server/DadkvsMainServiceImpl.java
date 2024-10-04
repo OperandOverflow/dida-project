@@ -61,11 +61,9 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		// for debug purposes
 		System.out.println("Receiving commit request:" + request);
 		if (this.server_state.i_am_leader){
-			//doPaxos(request);
-		}else{
-			System.out.println("I'm not the leader, cannot process requests");
-		}
 			this.server_state.sync_service.sendReqOrder(request.getReqid());
+		}
+
 
 		// Convert the request to the internal format
 		CommitRequest commitRequest = new CommitRequest(

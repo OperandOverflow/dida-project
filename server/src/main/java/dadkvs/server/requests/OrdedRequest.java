@@ -32,4 +32,15 @@ public class OrdedRequest {
     public int getRequestId() {
         return requestId;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OrdedRequest)) return false;
+
+        OrdedRequest that = (OrdedRequest) o;
+
+        if (sequenceNumber != that.sequenceNumber) return false;
+        return requestId == that.requestId;
+    }
 }

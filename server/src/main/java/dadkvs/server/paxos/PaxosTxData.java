@@ -2,15 +2,16 @@ package dadkvs.server.paxos;
 
 import dadkvs.server.paxos.messages.LearnMsg;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * This class holds the data for a paxos round
  */
-public class PaxosRoundData {
+public class PaxosTxData {
 
     /** The highest round number seen so far (-1 if uninitialized) */
-    public int roundNumber;
+    public int highestSeenRoundNumber;
 
     /** The leader id of the current round (-1 if uninitialized) */
     public int leaderId;
@@ -31,12 +32,12 @@ public class PaxosRoundData {
     public PaxosValue learnedValue;
 
 
-    public PaxosRoundData() {
-        this.roundNumber = -1;
+    public PaxosTxData() {
+        this.highestSeenRoundNumber = -1;
         this.leaderId = -1;
         this.highestAcceptedRoundNumber = -1;
         this.acceptedValue = null;
-        this.learnerMsgCount = null;
+        this.learnerMsgCount = new ArrayList<>();
         this.isMajorityReached = false;
         this.learnedValue = null;
     }

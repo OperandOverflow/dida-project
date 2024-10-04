@@ -1,8 +1,8 @@
 package dadkvs.server.paxos;
 
 import dadkvs.server.DadkvsServerState;
+import dadkvs.server.MestreAndre;
 import dadkvs.server.paxos.messages.*;
-import dadkvs.server.requests.OrdedRequest;
 
 import java.util.*;
 
@@ -17,82 +17,148 @@ public class SimplePaxosImpl implements Paxos{
     //============================================
     //             Leaders variables
     //============================================
+    /** The number of the current transaction */
+    private int transactionNumber;
+
     /** The round number of the current leader */
     private int roundNumber;
 
     //============================================
     //            Replica variables
     //============================================
-    /** The highest round number seen so far (-1 if uninitialized) */
-    private int highestSeenRoundNumber;
-
-    /** The round number when this replica has accepted (NULL if uninitialized) */
-    private int highestAcceptedRoundNumber;
-
-    /** The value that this replica has accepted in previous rounds(-1 if uninitialized) */
-    private PaxosValue acceptedValue;
-
-    /** The number of learn messages received by the learner */
-    private List<LearnMsg> learnerMsgCount;
-    private boolean isMajorityReached;
+    private Hashtable<Integer, PaxosTxData> paxosTxData;
 
     public SimplePaxosImpl(DadkvsServerState state) {
         this.server_state = state;
         this.MAJORITY = server_state.n_servers / 2 + 1;
         this.rpc = new SimplePaxosRPC(state);
         this.roundNumber = 0;
-        this.highestSeenRoundNumber = -1;
-        this.highestAcceptedRoundNumber = -1;
-        this.acceptedValue = null;
-        this.learnerMsgCount = new ArrayList<LearnMsg>();
-        this.isMajorityReached = false;
+        this.transactionNumber = 0;
+        this.paxosTxData = new Hashtable<>();
     }
-
 
     @Override
     public synchronized boolean propose(PaxosValue value) {
-        boolean isPrepared = false;
-        while (!isPrepared) {
-            // Loop while has no majority of promises
+        MestreAndre andre = new MestreAndre();
+        String blessing = andre.getBlessingsFromMestreAndre();
+        System.out.println(blessing);
+        boolean isMostRecentTx = false;
+        while (!isMostRecentTx) {
+            this.transactionNumber++;
+            isMostRecentTx = phaseOne(value);
+        }
+        return true;
+    }
+
+    private boolean phaseOne(PaxosValue value) {
+        boolean isMostRecentRound = false;
+        while (!isMostRecentRound) {
             this.roundNumber++;
-            int roundID = this.roundNumber*10 + server_state.my_id;
-            // TODO: adapt this to different configurations
-            List<PromiseMsg> promises = rpc.invokePrepare(roundID, server_state.my_id, 0);
+            System.out.println("[Paxos] Starting phase 1");
+            List<PromiseMsg> promises = rpc.invokePrepare(transactionNumber, roundNumber, server_state.my_id, 0);
+
+            // Count the accepted promises
             int acceptedCount = 0;
             for (PromiseMsg promise : promises) {
                 if (promise.accepted)
                     acceptedCount++;
             }
+            PaxosValue mostRecentValue = selectMostRecentValue(promises);
+
+            // If the majority accepted the prepare message
             if (acceptedCount >= MAJORITY) {
-                isPrepared = true;
+                System.out.println("[Paxos] Got majority, moving to phase two");
+                // Move to phase two
+                isMostRecentRound = phaseTwo(promises, value);
+                System.out.println("[Paxos] Phase two finished");
+                continue;
             }
+
+            // If there is no majority of promises, check if the most recent value has majority
+            // Count the amount of replicas have accepted that value
+            int acceptedValueCount = 0;
+            for (PromiseMsg promise : promises) {
+                if (promise.prevAcceptedValue != null && promise.prevAcceptedValue.equals(mostRecentValue))
+                    acceptedValueCount++;
+            }
+            // If the value has majority, i.e., tx is finished
+            if (acceptedValueCount >= MAJORITY) {
+                commitedValue(mostRecentValue);
+                return false;
+            }
+            // The transaction is not finished, retry with higher round number
         }
 
-        // TODO: process the accepted values
-
-        // TODO: invoke accept
-        return false;
+        return true;
     }
 
+    private boolean phaseTwo(List<PromiseMsg> promiseMsgList, PaxosValue value) {
+        System.out.println("[Paxos] Phase two");
+        PaxosValue mostRecentValue = selectMostRecentValue(promiseMsgList);
+
+        List<AcceptedMsg> accepted = null;
+        if (mostRecentValue == null)
+            accepted = rpc.invokeAccept(transactionNumber, roundNumber, server_state.my_id, 0, value);
+        else
+            accepted = rpc.invokeAccept(transactionNumber, roundNumber, server_state.my_id, 0, mostRecentValue);
+
+        int acceptedCount = 0;
+        for (AcceptedMsg accept : accepted) {
+            if (accept.accepted)
+                acceptedCount++;
+        }
+        return acceptedCount >= MAJORITY;
+    }
+
+    private PaxosValue selectMostRecentValue(List<PromiseMsg> promises) {
+        PaxosValue mostRecentValue = null;
+        int highestRoundNumber = -1;
+        for (PromiseMsg promise : promises) {
+            if (promise.prevAcceptedRoundNumber > highestRoundNumber) {
+                highestRoundNumber = promise.prevAcceptedRoundNumber;
+                mostRecentValue = promise.prevAcceptedValue;
+            }
+        }
+        return mostRecentValue;
+    }
 
 
     @Override
     public PromiseMsg prepare(PrepareMsg prepareMsg) {
         PromiseMsg promiseMsg = new PromiseMsg();
-        promiseMsg.leaderId = prepareMsg.leaderId;
+        promiseMsg.leaderId = prepareMsg.roundNumber;
         promiseMsg.configNumber = prepareMsg.configNumber;
 
-        if (prepareMsg.roundNumber > this.highestSeenRoundNumber) {
-            this.highestSeenRoundNumber = prepareMsg.roundNumber;
-            this.learnerMsgCount = new ArrayList<LearnMsg>();
-            this.isMajorityReached = false;
+        PaxosTxData round = paxosTxData.get(prepareMsg.transactionNumber);
+        // If the transaction doesn't exist
+        if (round == null) {
+            // Create a new round structure
+            round = new PaxosTxData();
+            paxosTxData.put(prepareMsg.roundNumber, round);
+
+            round.highestSeenRoundNumber = prepareMsg.roundNumber;
+            round.leaderId = prepareMsg.leaderId;
 
             promiseMsg.accepted = true;
-            promiseMsg.prevAcceptedRoundNumber = this.highestAcceptedRoundNumber;
-            promiseMsg.prevAcceptedValue = this.acceptedValue;
+            promiseMsg.prevAcceptedRoundNumber = -1;
+            promiseMsg.prevAcceptedValue = null;
             return promiseMsg;
         }
-        promiseMsg.accepted = false;
+
+        // *The transaction exists*
+        promiseMsg.prevAcceptedValue = round.acceptedValue;
+        promiseMsg.prevAcceptedRoundNumber = round.highestAcceptedRoundNumber;
+
+        // If the round number is lower than
+        if (prepareMsg.roundNumber <= round.highestSeenRoundNumber) {
+            // Respond with the data of the existing round
+            promiseMsg.accepted = false;
+            return promiseMsg;
+        }
+
+        // Respond with the data of the existing round
+        round.highestSeenRoundNumber = prepareMsg.roundNumber;
+        promiseMsg.accepted = true;
         return promiseMsg;
     }
 
@@ -102,39 +168,80 @@ public class SimplePaxosImpl implements Paxos{
         acceptedMsg.leaderId = acceptMsg.leaderId;
         acceptedMsg.configNumber = acceptMsg.configNumber;
 
-        if (acceptMsg.roundNumber >= this.highestSeenRoundNumber) {
-            this.highestSeenRoundNumber = acceptMsg.roundNumber;
-            this.highestAcceptedRoundNumber = acceptMsg.roundNumber;
-            this.acceptedValue = acceptMsg.proposedValue;
+        PaxosTxData round = paxosTxData.get(acceptMsg.transactionNumber);
+        // If the transaction doesn't exist
+        if (round == null) {
+            // Create a new round structure
+            round = new PaxosTxData();
+            paxosTxData.put(acceptMsg.roundNumber, round);
+
+            round.highestSeenRoundNumber = acceptMsg.roundNumber;
+            round.leaderId = acceptMsg.roundNumber;
+            round.highestAcceptedRoundNumber = acceptMsg.roundNumber;
+            round.acceptedValue = acceptMsg.proposedValue;
 
             acceptedMsg.accepted = true;
+            rpc.invokeLearn(acceptMsg.transactionNumber ,acceptMsg.roundNumber,
+                    acceptMsg.roundNumber, acceptMsg.configNumber, acceptMsg.proposedValue);
+        }
+
+        // *The transaction exists*
+        // If the round number is lower than
+        if (acceptMsg.roundNumber < round.highestSeenRoundNumber) {
+            // Respond with the data of the existing round
+            acceptedMsg.accepted = false;
             return acceptedMsg;
         }
-        acceptedMsg.accepted = false;
+
+        // Update the round data
+        round.highestSeenRoundNumber = acceptMsg.roundNumber;
+        round.acceptedValue = acceptMsg.proposedValue;
+        round.highestAcceptedRoundNumber = acceptMsg.roundNumber;
+
+        acceptedMsg.accepted = true;
+        rpc.invokeLearn(acceptMsg.transactionNumber, acceptMsg.roundNumber, acceptMsg.roundNumber,
+                    acceptMsg.configNumber, acceptMsg.proposedValue);
+
         return acceptedMsg;
     }
 
     @Override
     public LearnedMsg learn(LearnMsg learnMsg) {
+        System.out.println("[Paxos] Learning");
         LearnedMsg learnedMsg = new LearnedMsg();
-        learnedMsg.leaderId = learnMsg.leaderId;
+        learnedMsg.leaderId = learnMsg.roundNumber;
         learnedMsg.configNumber = learnMsg.configNumber;
 
-        if (learnMsg.roundNumber >= this.highestSeenRoundNumber) {
-            this.learnerMsgCount.add(learnMsg);
-            if (this.learnerMsgCount.size() >= this.MAJORITY && !this.isMajorityReached) {
-                this.isMajorityReached = true;
-
-                OrdedRequest ordedRequest = new OrdedRequest(
-                            learnMsg.learnedValue.getValue().getRequestSeq(),
-                            learnMsg.learnedValue.getValue().getRequestId());
-                this.server_state.ordered_request_processor.addReqOrder(ordedRequest);
-            }
-
-            learnedMsg.accepted = true;
+        PaxosTxData round = paxosTxData.get(learnMsg.transactionNumber);
+        // If the transaction doesn't exist
+        if (round == null) {
+            learnedMsg.accepted = false;
             return learnedMsg;
         }
-        learnedMsg.accepted = false;
+
+        // If the round number is lower than
+        if (learnMsg.roundNumber < round.highestSeenRoundNumber) {
+            learnedMsg.accepted = false;
+            return learnedMsg;
+        }
+
+        round.learnerMsgCount.add(learnMsg);
+        if (round.learnerMsgCount.size() >= MAJORITY && !round.isMajorityReached) {
+            round.isMajorityReached = true;
+
+            System.out.println("[Paxos] Reached majority, delivering value");
+            round.learnedValue = learnMsg.learnedValue;
+            commitedValue(learnMsg.learnedValue);
+        }
+        learnedMsg.accepted = true;
         return learnedMsg;
+    }
+
+    /**
+     * Process the commited value
+     * @param value
+     */
+    private void commitedValue(PaxosValue value) {
+        this.server_state.ordered_request_processor.addReqOrder(value.getValue());
     }
 }

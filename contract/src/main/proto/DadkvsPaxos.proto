@@ -16,6 +16,7 @@ message PhaseOneRequest {
   int32 phase1config    = 1;
   int32 phase1index     = 2;
   int32 phase1timestamp = 3;
+  int32 phase1txid      = 4;
 }
 
 message PhaseOneReply {
@@ -24,6 +25,7 @@ message PhaseOneReply {
   bool  phase1accepted        = 3;
   PaxosValue phase1value      = 4;
   int32 phase1timestamp       = 5;
+  int32 phase1txid            = 6;
 }
 
 message PhaseTwoRequest {
@@ -31,12 +33,14 @@ message PhaseTwoRequest {
   int32 phase2index           = 2;
   PaxosValue phase2value      = 3;
   int32 phase2timestamp       = 4;
+  int32 phase2txid            = 5;
 }
 
 message PhaseTwoReply {
   int32 phase2config   = 1;
   int32 phase2index    = 2;
   bool  phase2accepted = 3;
+  int32 phase2txid     = 4;
 }
 
 message LearnRequest {
@@ -44,6 +48,7 @@ message LearnRequest {
   int32 learnindex          = 2;
   PaxosValue learnvalue     = 3;
   int32 learntimestamp      = 4;
+  int32 learntxid           = 5;
 }
 
 message LearnReply {

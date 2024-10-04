@@ -143,6 +143,7 @@ public class OrderedRequestProcessor {
     // ==============================================================================
 
     public void addReqOrderList(List<OrdedRequest> orderedRequests) {
+        System.out.println("[ORP] Received order list");
         // Add the ordered requests to the order list
         synchronized (this.request_order) {
             // TODO: verify if the request is already in the queue before adding
@@ -152,9 +153,13 @@ public class OrderedRequestProcessor {
     }
 
     public void addReqOrder(OrdedRequest orderedRequest) {
+        System.out.println("[ORP] Received order " + orderedRequest.getRequestId() + " " + orderedRequest.getRequestSeq());
         // Add the ordered request to the order list
         synchronized (this.request_order) {
             this.request_order.add(orderedRequest);
+        }
+        for (OrdedRequest req : this.request_order) {
+            System.out.println("[ORP] Order id:" + req.getRequestId() + " seq:" + req.getRequestSeq());
         }
         notifyOrderChange();
     }

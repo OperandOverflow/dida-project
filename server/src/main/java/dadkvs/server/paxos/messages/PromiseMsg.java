@@ -7,7 +7,7 @@ import dadkvs.server.paxos.PaxosValue;
  */
 public class PromiseMsg {
 
-    /** phase1timestamp */
+    /** phase1index */
     public int leaderId;
 
     /** phase1config */
@@ -16,7 +16,7 @@ public class PromiseMsg {
     /** phase1accepted */
     public boolean accepted;
 
-    /** phase1index */
+    /** phase1timestamp */
     public int prevAcceptedRoundNumber;
 
     /** phase1value */
