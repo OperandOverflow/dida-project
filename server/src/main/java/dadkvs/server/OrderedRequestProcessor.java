@@ -1,8 +1,8 @@
 package dadkvs.server;
 
 import dadkvs.server.requests.CommitRequest;
+import dadkvs.server.requests.OrdedRequest;
 import dadkvs.server.requests.ReadRequest;
-import dadkvs.DadkvsServerSync;
 
 import java.util.List;
 import java.util.PriorityQueue;
@@ -17,15 +17,15 @@ public class OrderedRequestProcessor {
     /** The timestamp of when last write was done */
     private int                 timestamp;
 
-    private final PriorityQueue<DadkvsServerSync.SequencedRequest> request_order;
+    private final PriorityQueue<OrdedRequest> request_order;
 
     private final Object        order_lock = new Object();
 
     public OrderedRequestProcessor(DadkvsServerState state) {
         this.server_state = state;
         this.timestamp = 0;
-        this.request_order = new PriorityQueue<DadkvsServerSync.SequencedRequest>(
-                (o1, o2) -> o1.getRequestseq() - o2.getRequestseq()
+        this.request_order = new PriorityQueue<OrdedRequest>(
+                (o1, o2) -> o1.getRequestSeq() - o2.getRequestSeq()
         );
     }
 
@@ -45,11 +45,11 @@ public class OrderedRequestProcessor {
         System.out.printf("Read request %d entered the queue\n", request.getReqid());
 
         // Check if the request is the next in the order
-        DadkvsServerSync.SequencedRequest nextRequest;
+        OrdedRequest nextRequest;
         synchronized (this.request_order) {
             nextRequest = this.request_order.peek();
         }
-        while (nextRequest == null || nextRequest.getRequestid() != request.getReqid()) {
+        while (nextRequest == null || nextRequest.getRequestId() != request.getReqid()) {
             // For debug purposes
             System.out.printf("Read request %d waiting\n", request.getReqid());
 
@@ -92,11 +92,11 @@ public class OrderedRequestProcessor {
         System.out.printf("Commit request %d entered the queue\n", request.getReqid());
 
         // Check if the request is the next in the order
-        DadkvsServerSync.SequencedRequest nextRequest;
+        OrdedRequest nextRequest;
         synchronized (this.request_order) {
             nextRequest = this.request_order.peek();
         }
-        while (nextRequest == null || nextRequest.getRequestid() != request.getReqid()) {
+        while (nextRequest == null || nextRequest.getRequestId() != request.getReqid()) {
             // For debug purposes
             System.out.printf("Commit request %d waiting\n", request.getReqid());
 
@@ -142,11 +142,19 @@ public class OrderedRequestProcessor {
     //                                Synchronization
     // ==============================================================================
 
-    public void addReqOrderList(List<DadkvsServerSync.SequencedRequest> orderedRequests) {
+    public void addReqOrderList(List<OrdedRequest> orderedRequests) {
         // Add the ordered requests to the order list
         synchronized (this.request_order) {
             // TODO: verify if the request is already in the queue before adding
             this.request_order.addAll(orderedRequests);
+        }
+        notifyOrderChange();
+    }
+
+    public void addReqOrder(OrdedRequest orderedRequest) {
+        // Add the ordered request to the order list
+        synchronized (this.request_order) {
+            this.request_order.add(orderedRequest);
         }
         notifyOrderChange();
     }
