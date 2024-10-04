@@ -1,10 +1,10 @@
 package dadkvs.server;
 
 /**
- * Do NOT question the creation of this class!
- * Do NOT question the creation of this class!
- * Do NOT question the creation of this class!
- *
+ * Do NOT question the creation of this class! <br>
+ * Do NOT question the creation of this class! <br>
+ * Do NOT question the creation of this class! <br>
+ * <pre>
  * Mestre André.
  * Do NOT question the choices of the Mestre André.
  * Mestre André knows what he is doing.
@@ -118,6 +118,7 @@ package dadkvs.server;
  * Mestre André is the master of the Data Encryption.
  * Mestre André is the master of the Data Decryption.
  * Mestre André is the master of the Data Hashing.
+ * </pre>
  */
 public class MestreAndre {
 
