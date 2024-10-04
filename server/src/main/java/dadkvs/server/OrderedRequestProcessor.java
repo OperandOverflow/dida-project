@@ -1,7 +1,7 @@
 package dadkvs.server;
 
-import dadkvs.server.entities.CommitRequest;
-import dadkvs.server.entities.ReadRequest;
+import dadkvs.server.requests.CommitRequest;
+import dadkvs.server.requests.ReadRequest;
 import dadkvs.DadkvsServerSync;
 
 import java.util.List;

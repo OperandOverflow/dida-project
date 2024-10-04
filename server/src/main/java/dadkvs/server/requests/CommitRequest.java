@@ -1,4 +1,4 @@
-package dadkvs.server.entities;
+package dadkvs.server.requests;
 
 public class CommitRequest extends AbsRequest{
 

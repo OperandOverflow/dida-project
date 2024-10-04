@@ -1,6 +1,4 @@
-package dadkvs.server;
-
-import dadkvs.server.entities.AbsRequest;
+package dadkvs.server.requests;
 
 import java.util.HashMap;
 

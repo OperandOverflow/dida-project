@@ -1,4 +1,4 @@
-package dadkvs.server.entities;
+package dadkvs.server.requests;
 
 /**
  * An abstract class to represent a client request.
