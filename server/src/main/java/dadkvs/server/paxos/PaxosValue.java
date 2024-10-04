@@ -1,19 +1,15 @@
 package dadkvs.server.paxos;
 
+import dadkvs.server.requests.OrdedRequest;
+
 public class PaxosValue {
-    public int requestId;
-    public int sequenceNumber;
+    private OrdedRequest request;
 
-    public PaxosValue(int requestId, int sequenceNumber) {
-        this.requestId = requestId;
-        this.sequenceNumber = sequenceNumber;
+    public PaxosValue(OrdedRequest request) {
+        this.request = request;
     }
 
-    public int getRequestId() {
-        return requestId;
-    }
-
-    public int getSequenceNumber() {
-        return sequenceNumber;
+    public OrdedRequest getValue() {
+        return request;
     }
 }
