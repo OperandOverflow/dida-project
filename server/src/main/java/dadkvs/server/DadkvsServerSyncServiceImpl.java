@@ -2,6 +2,7 @@ package dadkvs.server;
 
 import dadkvs.*;
 import dadkvs.DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub;
+import dadkvs.server.paxos.PaxosValue;
 import dadkvs.server.requests.OrdedRequest;
 import io.grpc.stub.StreamObserver;
 
@@ -13,6 +14,8 @@ import io.grpc.ManagedChannelBuilder;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import dadkvs.server.paxos.SimplePaxosImpl;
 
 /**
  * This class implements the gRPC service for the server-to-server
@@ -29,6 +32,7 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
     /** The paxos round number */
     int paxos_round;
 
+    SimplePaxosImpl paxos;
     /** Broadcast control variables */
     private final int   n_servers = 5;
     private ManagedChannel[] channels;
@@ -38,6 +42,7 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
         this.server_state = state;
         this.sequence_number = 0;
         this.paxos_round = 0;
+        this.paxos = new SimplePaxosImpl(this.server_state);
         initiate();
     }
 
@@ -108,7 +113,12 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
 
         DadkvsServerSync.RequestOrder requestOrder = requestOrderBuilder.build();
 
-//        doPaxos(reqid, this.sequence_number);
+        //------------------------Preparing for Performing Paxos-----------------------------//
+        OrdedRequest ord_request = new OrdedRequest(reqid, this.sequence_number);
+        PaxosValue value_proposed = new PaxosValue(ord_request);
+        paxos.propose(value_proposed);
+
+
 
         // Create an empty list to collect the responses
         ArrayList<DadkvsServerSync.Empty> responseList = new ArrayList<DadkvsServerSync.Empty>();
