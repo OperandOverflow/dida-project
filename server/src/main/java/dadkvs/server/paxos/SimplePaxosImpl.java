@@ -39,9 +39,9 @@ public class SimplePaxosImpl implements Paxos{
 
     @Override
     public synchronized boolean propose(PaxosValue value) {
-        MestreAndre andre = new MestreAndre();
-        String blessing = andre.getBlessingsFromMestreAndre();
-        System.out.println(blessing);
+        //MestreAndre andre = new MestreAndre();
+        //String blessing = andre.getBlessingsFromMestreAndre();
+        //System.out.println(blessing);
         boolean isMostRecentTx = false;
         while (!isMostRecentTx) {
             this.transactionNumber++;
