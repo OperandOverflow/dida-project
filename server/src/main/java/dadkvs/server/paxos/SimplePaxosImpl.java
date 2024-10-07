@@ -124,7 +124,7 @@ public class SimplePaxosImpl implements Paxos{
 
 
     @Override
-    public PromiseMsg prepare(PrepareMsg prepareMsg) {
+    public synchronized PromiseMsg prepare(PrepareMsg prepareMsg) {
         PromiseMsg promiseMsg = new PromiseMsg();
         promiseMsg.leaderId = prepareMsg.roundNumber;
         promiseMsg.configNumber = prepareMsg.configNumber;
@@ -163,7 +163,7 @@ public class SimplePaxosImpl implements Paxos{
     }
 
     @Override
-    public AcceptedMsg accept(AcceptMsg acceptMsg) {
+    public synchronized AcceptedMsg accept(AcceptMsg acceptMsg) {
         AcceptedMsg acceptedMsg = new AcceptedMsg();
         acceptedMsg.leaderId = acceptMsg.leaderId;
         acceptedMsg.configNumber = acceptMsg.configNumber;
@@ -206,7 +206,7 @@ public class SimplePaxosImpl implements Paxos{
     }
 
     @Override
-    public LearnedMsg learn(LearnMsg learnMsg) {
+    public synchronized LearnedMsg learn(LearnMsg learnMsg) {
         System.out.println("[Paxos] Learning");
         LearnedMsg learnedMsg = new LearnedMsg();
         learnedMsg.leaderId = learnMsg.roundNumber;
