@@ -12,28 +12,11 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 
     ServerState server_state;
     int               timestamp;
-	/** Broadcast control variables */
-	private final int   n_servers = 5;
-	private ManagedChannel[] channels;
-	private DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] async_stubs;
     
     public DadkvsMainServiceImpl(ServerState state) {
         this.server_state = state;
 		this.timestamp = 0;
-		initiate();
     }
-
-	public void initiate() {
-		this.channels = new ManagedChannel[n_servers];
-		this.async_stubs = new DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[n_servers];
-		String localhost = "localhost";
-		for(int i = 0; i < n_servers; i++) {
-			int port = this.server_state.base_port + i;
-			this.channels[i] = ManagedChannelBuilder.forAddress(localhost, port).usePlaintext().build();
-			this.async_stubs[i] = DadkvsPaxosServiceGrpc.newStub(this.channels[i]);
-		}
-
-	}
 
     @Override
     public void read(DadkvsMain.ReadRequest request, StreamObserver<DadkvsMain.ReadReply> responseObserver) {
@@ -41,7 +24,7 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		System.out.println("Receiving read request:" + request);
 
 		if (this.server_state.i_am_leader)
-			this.server_state.sync_service.sendReqOrder(request.getReqid());
+			this.server_state.serverSync.sendReqOrder(request.getReqid());
 
 		// Convert the request to the internal format
 		ReadRequest readRequest = new ReadRequest(request.getReqid(), request.getKey());
@@ -61,7 +44,7 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		// for debug purposes
 		System.out.println("Receiving commit request:" + request);
 		if (this.server_state.i_am_leader){
-			this.server_state.sync_service.sendReqOrder(request.getReqid());
+			this.server_state.serverSync.sendReqOrder(request.getReqid());
 		}
 
 
