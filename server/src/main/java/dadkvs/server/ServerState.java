@@ -19,9 +19,7 @@ public class ServerState {
     public Paxos           paxos;
     public OrderedRequestProcessor ordered_request_processor;
     public ServerRpcStubs  rpc_stubs;
-
-    // TODO: questionable choice to initialize this here
-    public DadkvsServerSyncServiceImpl sync_service;
+    public ServerSync      serverSync;
 
     
     public ServerState(int kv_size, int port, int myself) {
@@ -40,7 +38,6 @@ public class ServerState {
         paxos = new SimplePaxosImpl(this);
         ordered_request_processor = new OrderedRequestProcessor(this);
         rpc_stubs = new ServerRpcStubs(this);
-
-        sync_service = new DadkvsServerSyncServiceImpl(this);
+        serverSync = new ServerSync(this);
     }
 }
