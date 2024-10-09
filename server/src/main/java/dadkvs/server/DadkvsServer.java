@@ -4,13 +4,10 @@ import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 
-import dadkvs.DadkvsMain;
-import dadkvs.DadkvsMainServiceGrpc;
-
 
 public class DadkvsServer {
 
-    static DadkvsServerState server_state;
+    static ServerState server_state;
 								    
     /** Server host port. */
     private static int port;
@@ -36,7 +33,7 @@ public class DadkvsServer {
 		int base_port = Integer.valueOf(args[0]);
 		int my_id     = Integer.valueOf(args[1]);
 
-		server_state = new DadkvsServerState(kvsize, base_port, my_id);
+		server_state = new ServerState(kvsize, base_port, my_id);
 
 		port = base_port + my_id;
 

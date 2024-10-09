@@ -10,14 +10,14 @@ import io.grpc.ManagedChannelBuilder;
  */
 public class ServerRpcStubs {
 
-    private final DadkvsServerState server_state;
+    private final ServerState server_state;
 
     private ManagedChannel[] channels;
 
     public DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub[] server_sync_stubs;
     public DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_stubs;
 
-    public ServerRpcStubs(DadkvsServerState state) {
+    public ServerRpcStubs(ServerState state) {
         this.server_state = state;
         initiate();
     }

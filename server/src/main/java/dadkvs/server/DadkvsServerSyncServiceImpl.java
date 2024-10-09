@@ -1,19 +1,14 @@
 package dadkvs.server;
 
 import dadkvs.*;
-import dadkvs.DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceStub;
 import dadkvs.server.paxos.PaxosValue;
 import dadkvs.server.requests.OrdedRequest;
 import io.grpc.stub.StreamObserver;
-
-import dadkvs.util.GenericResponseCollector;
-import dadkvs.util.CollectorStreamObserver;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import dadkvs.server.paxos.SimplePaxosImpl;
 
@@ -24,7 +19,7 @@ import dadkvs.server.paxos.SimplePaxosImpl;
 public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.DadkvsServerSyncServiceImplBase {
 
 
-    DadkvsServerState server_state;
+    ServerState server_state;
 
     /**
      * The sequence number of the request order.
@@ -44,7 +39,7 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
     private ManagedChannel[] channels;
     private DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_server_sync_stub;
 
-    public DadkvsServerSyncServiceImpl(DadkvsServerState state) {
+    public DadkvsServerSyncServiceImpl(ServerState state) {
         this.server_state = state;
         this.sequence_number = 0;
         this.paxos_round = 0;

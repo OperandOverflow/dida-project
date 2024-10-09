@@ -1,8 +1,11 @@
 package dadkvs.server;
 
 import dadkvs.server.paxos.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class DadkvsServerState {
+public class ServerState {
+    public Lock            i_am_leader_lock;
     public boolean         i_am_leader;
     public int             debug_mode;
     public int             base_port;
@@ -21,9 +24,10 @@ public class DadkvsServerState {
     public DadkvsServerSyncServiceImpl sync_service;
 
     
-    public DadkvsServerState(int kv_size, int port, int myself) {
+    public ServerState(int kv_size, int port, int myself) {
         base_port = port;
         my_id = myself;
+        i_am_leader_lock = new ReentrantLock();
         i_am_leader = false;
         debug_mode = 0;
         store_size = kv_size;

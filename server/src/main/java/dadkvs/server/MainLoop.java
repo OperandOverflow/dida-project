@@ -1,12 +1,12 @@
 package dadkvs.server;
 
 public class MainLoop implements Runnable  {
-    DadkvsServerState server_state;
+    ServerState server_state;
 
     private boolean has_work;
     
     
-    public MainLoop(DadkvsServerState state) {
+    public MainLoop(ServerState state) {
 		this.server_state = state;
 		this.has_work = false;
     }

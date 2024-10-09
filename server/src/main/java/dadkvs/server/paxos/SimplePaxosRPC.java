@@ -1,7 +1,7 @@
 package dadkvs.server.paxos;
 
 import dadkvs.DadkvsPaxos;
-import dadkvs.server.DadkvsServerState;
+import dadkvs.server.ServerState;
 import dadkvs.server.paxos.messages.AcceptedMsg;
 import dadkvs.server.paxos.messages.LearnedMsg;
 import dadkvs.server.paxos.messages.PromiseMsg;
@@ -18,9 +18,9 @@ import java.util.List;
  */
 public class SimplePaxosRPC {
 
-    private final DadkvsServerState server_state;
+    private final ServerState server_state;
 
-    public SimplePaxosRPC(DadkvsServerState state) {
+    public SimplePaxosRPC(ServerState state) {
         this.server_state = state;
     }
 

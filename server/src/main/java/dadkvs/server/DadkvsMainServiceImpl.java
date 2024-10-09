@@ -10,14 +10,14 @@ import io.grpc.stub.StreamObserver;
 
 public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServiceImplBase {
 
-    DadkvsServerState server_state;
+    ServerState server_state;
     int               timestamp;
 	/** Broadcast control variables */
 	private final int   n_servers = 5;
 	private ManagedChannel[] channels;
 	private DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] async_stubs;
     
-    public DadkvsMainServiceImpl(DadkvsServerState state) {
+    public DadkvsMainServiceImpl(ServerState state) {
         this.server_state = state;
 		this.timestamp = 0;
 		initiate();

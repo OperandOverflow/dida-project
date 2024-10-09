@@ -12,7 +12,7 @@ import java.util.PriorityQueue;
  */
 public class OrderedRequestProcessor {
 
-    final DadkvsServerState     server_state;
+    final ServerState server_state;
 
     /** The timestamp of when last write was done */
     private int                 timestamp;
@@ -21,7 +21,7 @@ public class OrderedRequestProcessor {
 
     private final Object        order_lock = new Object();
 
-    public OrderedRequestProcessor(DadkvsServerState state) {
+    public OrderedRequestProcessor(ServerState state) {
         this.server_state = state;
         this.timestamp = 0;
         this.request_order = new PriorityQueue<OrdedRequest>(

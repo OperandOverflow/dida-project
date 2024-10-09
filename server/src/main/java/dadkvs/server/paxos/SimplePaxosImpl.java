@@ -1,14 +1,13 @@
 package dadkvs.server.paxos;
 
-import dadkvs.server.DadkvsServerState;
-import dadkvs.server.MestreAndre;
+import dadkvs.server.ServerState;
 import dadkvs.server.paxos.messages.*;
 
 import java.util.*;
 
 public class SimplePaxosImpl implements Paxos{
 
-    private final DadkvsServerState server_state;
+    private final ServerState server_state;
 
     private final int MAJORITY;
 
@@ -28,7 +27,7 @@ public class SimplePaxosImpl implements Paxos{
     //============================================
     private Hashtable<Integer, PaxosTxData> paxosTxData;
 
-    public SimplePaxosImpl(DadkvsServerState state) {
+    public SimplePaxosImpl(ServerState state) {
         this.server_state = state;
         this.MAJORITY = server_state.n_servers / 2 + 1;
         this.rpc = new SimplePaxosRPC(state);

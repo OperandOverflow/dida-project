@@ -9,9 +9,9 @@ import io.grpc.stub.StreamObserver;
 public class DadkvsConsoleServiceImpl extends DadkvsConsoleServiceGrpc.DadkvsConsoleServiceImplBase {
 
     
-    DadkvsServerState server_state;
+    ServerState server_state;
 
-    public DadkvsConsoleServiceImpl(DadkvsServerState state) {
+    public DadkvsConsoleServiceImpl(ServerState state) {
 	this.server_state = state;
     }
 
