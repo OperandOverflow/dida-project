@@ -20,7 +20,7 @@ public class RequestQueue {
     private final ReadWriteLock lock;
 
     public RequestQueue() {
-        this.queue = new HashMap<Integer, AbsRequest>();
+        this.queue = new HashMap<>();
         this.lock = new ReentrantReadWriteLock();
     }
 
@@ -31,7 +31,7 @@ public class RequestQueue {
     public void addRequest(AbsRequest request) {
         this.lock.writeLock().lock();
         try {
-            this.queue.put(request.getReqid(), request);
+            this.queue.put(request.getRequestId(), request);
         } finally {
             this.lock.writeLock().unlock();
         }
@@ -73,7 +73,7 @@ public class RequestQueue {
     public void removeRequest(AbsRequest request) {
         this.lock.writeLock().lock();
         try {
-            this.queue.remove(request.getReqid());
+            this.queue.remove(request.getRequestId());
         } finally {
             this.lock.writeLock().unlock();
         }
@@ -103,7 +103,7 @@ public class RequestQueue {
         this.lock.readLock().lock();
         List<AbsRequest> requests;
         try {
-            requests = new ArrayList<AbsRequest>(this.queue.values());
+            requests = new ArrayList<>(this.queue.values());
         } finally {
             this.lock.readLock().unlock();
         }

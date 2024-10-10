@@ -5,18 +5,18 @@ package dadkvs.server.requests;
  */
 public abstract class AbsRequest {
 
-    protected int reqid;
+    protected int requestId;
 
     public AbsRequest(int reqid) {
-        this.reqid = reqid;
+        this.requestId = reqid;
     }
 
     /**
      * Get the request id.
      * @return The request id.
      */
-    public int getReqid() {
-        return this.reqid;
+    public int getRequestId() {
+        return this.requestId;
     }
 
     @Override
@@ -28,6 +28,6 @@ public abstract class AbsRequest {
             return false;
         }
         final AbsRequest other = (AbsRequest) obj;
-        return this.reqid == other.reqid;
+        return this.requestId == other.requestId;
     }
 }
