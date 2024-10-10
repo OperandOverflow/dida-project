@@ -1,9 +1,5 @@
 package dadkvs.consoleclient;
 
-
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -23,25 +19,6 @@ import io.grpc.ManagedChannelBuilder;
 public class DadkvsConsoleClient {
 
 	static final String LINE_SEPARATOR = System.lineSeparator();
-	static String BLESSING = 	"⡿⢯⠣⢉⣏⣿⢂⣿⣿⣿⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⣿⣿" + LINE_SEPARATOR +
-								"⡗⣼⠠⠨⢢⡼⣿⣿⣿⣿⣿⡩⡝⠑⠫⢸⡰⠙⣿⣿⣿⣿⣿⣿⣿⡷⢻⣷⣿" + LINE_SEPARATOR +
-								"⡇⡵⣷⠱⢘⢨⣿⣿⠟⠝⠋⠀⠀⠈⠉⠁⠀⠁⠈⠙⠻⢿⣿⣿⢿⣿⣾⣿⣿" + LINE_SEPARATOR +
-								"⣇⣿⣿⣗⣔⡸⣾⠏⠀⢀⣠⣶⣿⣿⣿⣿⣿⣶⣤⡀⠀⠐⠩⢻⣿⣿⣿⣿⣿" + LINE_SEPARATOR +
-								"⣿⣿⣿⣿⣿⡖⠁⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣄⠀⠀⠈⣿⣿⣿⣿⣿" + LINE_SEPARATOR +
-								"⣯⣞⡽⣻⠧⠀⢠⡾⠻⠿⠩⠻⣿⣻⡫⠛⠛⠛⠛⠻⢯⡄⠀⠈⣿⣝⡿⣿⣿" + LINE_SEPARATOR +
-								"⣿⣿⣿⣿⠁⠀⣆⡠⣤⣤⣶⣶⡳⣿⣷⣶⣶⣶⣤⣤⣀⠱⠀⠀⠸⢿⡷⢽⣿" + LINE_SEPARATOR +
-								"⣿⣿⣿⣿⡇⠀⠿⠟⠋⠀⠀⢙⢯⢸⣇⡀⠀⠁⠉⡙⠛⣷⣆⠀⠀⢈⠮⣬⣭" + LINE_SEPARATOR +
-								"⣿⣿⣦⡹⡃⢀⣿⣶⣦⣤⠔⣋⢵⣿⣿⣿⣶⣤⣤⣶⣶⣿⣳⡀⠀⠀⠲⡿⣿" + LINE_SEPARATOR +
-								"⣿⣿⣿⠣⡁⢸⣿⣿⣿⣿⣓⠘⢳⠝⠋⢚⡟⣿⣿⣿⣿⣿⣷⡦⠀⠀⠘⢻⣿" + LINE_SEPARATOR +
-								"⣿⣿⠯⠡⢳⢸⣿⣿⣿⣷⢷⣰⣿⣷⡄⣐⢾⣿⣿⣿⣿⣿⣿⣧⡀⠀⠄⠀⡻" + LINE_SEPARATOR +
-								"⣿⣿⠁⠑⢬⠸⣿⣿⡯⠶⠟⠛⣝⠃⠑⠘⠽⣿⣟⣿⣿⣿⣿⣿⡇⠀⡰⣷⣾" + LINE_SEPARATOR +
-								"⣿⣿⠆⢀⢘⡣⡿⣿⣧⣦⣦⣔⣀⣂⢀⣀⣀⣤⣨⣿⣿⣿⣿⣿⡏⣤⠌⣿⣿" + LINE_SEPARATOR +
-								"⣿⣿⣦⣤⣰⣶⡼⣿⣿⣿⣿⣿⣿⣷⣿⣾⣿⣿⣿⣿⣿⣿⣿⣯⡆⠀⠐⣿⣿" + LINE_SEPARATOR +
-								"⣿⣿⣿⣿⣶⣿⣿⠹⣿⣿⣿⣿⣿⣿⣟⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠀⠀⣿⣿" + LINE_SEPARATOR +
-								"⣿⣿⣿⣿⣿⣿⣿⠀⠙⡝⢿⢿⡿⠽⣎⣌⣹⡿⢿⣿⣿⣿⣿⣿⣿⡆⠀⣾⣷" + LINE_SEPARATOR +
-								"⣿⣿⣿⣿⣿⣿⣿⠀⠀⢫⣲⣐⢀⡀⡉⢀⢀⠠⣻⣿⣿⣿⣿⣿⣿⣷⡠⢿⣿" + LINE_SEPARATOR +
-								"⣿⣿⣿⣿⣿⣿⡟⠀⠀⠈⣿⣷⣷⣤⣝⣮⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠏⠀⠿" + LINE_SEPARATOR +
-								"⣿⣿⣿⣿⣿⣿⣝⠀⠀⠀⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣿⡟⠁⠀⠀⠀⠃" + LINE_SEPARATOR;
 
 	static int n_servers = 5;
 
@@ -76,13 +53,12 @@ public class DadkvsConsoleClient {
 		initiate(args);
 
 		String command;
-		boolean isleader = true;
+		boolean isleader;
 		int replica, mode, configuration, client_id = 0, sequence_number = 0;
 
 		boolean keep_going = true;
 
 		while (keep_going) {
-			System.out.println(BLESSING);
 			System.out.print("console> ");
 			command = scanner.nextLine();
 			String[] commandParts = command.split(" ");
@@ -120,9 +96,9 @@ public class DadkvsConsoleClient {
 					System.out.println("setting leader " + isleader + " replica " + replica);
 
 					DadkvsConsole.SetLeaderRequest.Builder setleader_request = DadkvsConsole.SetLeaderRequest.newBuilder();
-					ArrayList<DadkvsConsole.SetLeaderReply> setleader_responses = new ArrayList<DadkvsConsole.SetLeaderReply>();;
-					GenericResponseCollector<DadkvsConsole.SetLeaderReply> setleader_collector = new GenericResponseCollector<DadkvsConsole.SetLeaderReply>(setleader_responses, 1);
-					CollectorStreamObserver<DadkvsConsole.SetLeaderReply> setleader_observer =  new CollectorStreamObserver<DadkvsConsole.SetLeaderReply>(setleader_collector);
+					ArrayList<DadkvsConsole.SetLeaderReply> setleader_responses = new ArrayList<>();
+					GenericResponseCollector<DadkvsConsole.SetLeaderReply> setleader_collector = new GenericResponseCollector<>(setleader_responses, 1);
+					CollectorStreamObserver<DadkvsConsole.SetLeaderReply> setleader_observer =  new CollectorStreamObserver<>(setleader_collector);
 					setleader_request.setIsleader(isleader);
 					console_async_stubs[replica].setleader(setleader_request.build(), setleader_observer);
 					setleader_collector.waitForTarget(1);
@@ -150,9 +126,9 @@ public class DadkvsConsoleClient {
 
 
 					DadkvsConsole.SetDebugRequest.Builder setdebug_request = DadkvsConsole.SetDebugRequest.newBuilder();
-					ArrayList<DadkvsConsole.SetDebugReply> setdebug_responses = new ArrayList<DadkvsConsole.SetDebugReply>();;
-					GenericResponseCollector<DadkvsConsole.SetDebugReply> setdebug_collector = new GenericResponseCollector<DadkvsConsole.SetDebugReply>(setdebug_responses, 1);
-					CollectorStreamObserver<DadkvsConsole.SetDebugReply> setdebug_observer =  new CollectorStreamObserver<DadkvsConsole.SetDebugReply>(setdebug_collector);
+					ArrayList<DadkvsConsole.SetDebugReply> setdebug_responses = new ArrayList<>();
+					GenericResponseCollector<DadkvsConsole.SetDebugReply> setdebug_collector = new GenericResponseCollector<>(setdebug_responses, 1);
+					CollectorStreamObserver<DadkvsConsole.SetDebugReply> setdebug_observer = new CollectorStreamObserver<>(setdebug_collector);
 					setdebug_request.setMode(mode);
 					console_async_stubs[replica].setdebug(setdebug_request.build(), setdebug_observer);
 					setdebug_collector.waitForTarget(1);
@@ -180,13 +156,13 @@ public class DadkvsConsoleClient {
 					int old_config = 0;
 					int old_config_ts = 0;
 
-					DadkvsMain.ReadRequest.Builder read_request  = DadkvsMain.ReadRequest.newBuilder();;
-					ArrayList<DadkvsMain.ReadReply> read_responses = new ArrayList<DadkvsMain.ReadReply>();;
-					GenericResponseCollector<DadkvsMain.ReadReply> read_collector = new GenericResponseCollector<DadkvsMain.ReadReply>(read_responses, n_servers);;
+					DadkvsMain.ReadRequest.Builder read_request  = DadkvsMain.ReadRequest.newBuilder();
+					ArrayList<DadkvsMain.ReadReply> read_responses = new ArrayList<>();
+					GenericResponseCollector<DadkvsMain.ReadReply> read_collector = new GenericResponseCollector<>(read_responses, n_servers);;
 
 					read_request.setKey(0);
 					for (int i = 0; i < n_servers; i++) {
-						CollectorStreamObserver<DadkvsMain.ReadReply> read_observer = new CollectorStreamObserver<DadkvsMain.ReadReply>(read_collector);
+						CollectorStreamObserver<DadkvsMain.ReadReply> read_observer = new CollectorStreamObserver<>(read_collector);
 						main_async_stubs[i].read(read_request.build(), read_observer);
 					}
 					read_collector.waitForTarget(responses_needed);
@@ -218,11 +194,11 @@ public class DadkvsConsoleClient {
 
 						System.out.println("Reqid " + reqid);
 
-						ArrayList<DadkvsMain.CommitReply> commit_responses = new ArrayList<DadkvsMain.CommitReply>();
-						GenericResponseCollector<DadkvsMain.CommitReply> commit_collector = new GenericResponseCollector<DadkvsMain.CommitReply> (commit_responses, n_servers);
+						ArrayList<DadkvsMain.CommitReply> commit_responses = new ArrayList<>();
+						GenericResponseCollector<DadkvsMain.CommitReply> commit_collector = new GenericResponseCollector<>(commit_responses, n_servers);
 
 						for (int i = 0; i < n_servers; i++) {
-							CollectorStreamObserver<DadkvsMain.CommitReply> commit_observer = new CollectorStreamObserver<DadkvsMain.CommitReply>(commit_collector);
+							CollectorStreamObserver<DadkvsMain.CommitReply> commit_observer = new CollectorStreamObserver<>(commit_collector);
 							main_async_stubs[i].committx(commit_request.build(), commit_observer);
 						}
 						commit_collector.waitForTarget(responses_needed);
@@ -265,7 +241,6 @@ public class DadkvsConsoleClient {
 		targets  = new String[n_servers];
 		for (int i = 0; i < n_servers; i++) {
 			int target_port = port +i;
-			targets[i] = new String();
 			targets[i] = host + ":" + target_port;
 			System.out.printf("targets[%d] = %s%n", i, targets[i]);
 		}
