@@ -25,7 +25,7 @@ public class SimplePaxosImpl implements Paxos{
     //============================================
     //            Replica variables
     //============================================
-    private Hashtable<Integer, PaxosTxData> paxosTxData;
+    private final Hashtable<Integer, PaxosTxData> paxosTxData;
 
     public SimplePaxosImpl(ServerState state) {
         this.server_state = state;
@@ -56,12 +56,14 @@ public class SimplePaxosImpl implements Paxos{
             System.out.println("[Paxos] Starting phase 1");
             List<PromiseMsg> promises = rpc.invokePrepare(transactionNumber, roundNumber, server_state.my_id, 0);
 
+            System.out.println("[Paxos] Counting promises");
             // Count the accepted promises
             int acceptedCount = 0;
             for (PromiseMsg promise : promises) {
                 if (promise.accepted)
                     acceptedCount++;
             }
+            System.out.println("[Paxos] Selecting most recent value");
             PaxosValue mostRecentValue = selectMostRecentValue(promises);
 
             // If the majority accepted the prepare message
@@ -73,6 +75,7 @@ public class SimplePaxosImpl implements Paxos{
                 continue;
             }
 
+            System.out.println("[Paxos] Didn't get majority, checking if most recent value has majority");
             // If there is no majority of promises, check if the most recent value has majority
             // Count the amount of replicas have accepted that value
             int acceptedValueCount = 0;
@@ -86,6 +89,7 @@ public class SimplePaxosImpl implements Paxos{
                 return false;
             }
             // The transaction is not finished, retry with higher round number
+            System.out.println("[Paxos] Retrying with higher round number");
         }
 
         return true;
@@ -95,7 +99,7 @@ public class SimplePaxosImpl implements Paxos{
         System.out.println("[Paxos] Phase two");
         PaxosValue mostRecentValue = selectMostRecentValue(promiseMsgList);
 
-        List<AcceptedMsg> accepted = null;
+        List<AcceptedMsg> accepted;
         if (mostRecentValue == null)
             accepted = rpc.invokeAccept(transactionNumber, roundNumber, server_state.my_id, 0, value);
         else
@@ -238,9 +242,9 @@ public class SimplePaxosImpl implements Paxos{
 
     /**
      * Process the commited value
-     * @param value
+     * @param value The value to be commited
      */
     private void commitedValue(PaxosValue value) {
-        this.server_state.ordered_request_processor.addReqOrder(value.getValue());
+        this.server_state.request_handler.addOrderedRequest(value.getValue());
     }
 }
