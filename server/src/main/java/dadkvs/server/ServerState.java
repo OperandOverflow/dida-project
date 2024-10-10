@@ -1,11 +1,11 @@
 package dadkvs.server;
 
 import dadkvs.server.paxos.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ServerState {
-    public Lock            i_am_leader_lock;
+    public ReadWriteLock   i_am_leader_lock;
     public boolean         i_am_leader;
     public int             debug_mode;
     public int             base_port;
@@ -16,16 +16,16 @@ public class ServerState {
     public KeyValueStore   store;
     public MainLoop        main_loop;
     public Thread          main_loop_worker;
+    public RequestHandler  request_handler;
     public Paxos           paxos;
-    public OrderedRequestProcessor ordered_request_processor;
     public ServerRpcStubs  rpc_stubs;
-    public ServerSync      serverSync;
+    public ConsoleConfig   consoleConfig;
 
     
     public ServerState(int kv_size, int port, int myself) {
         base_port = port;
         my_id = myself;
-        i_am_leader_lock = new ReentrantLock();
+        i_am_leader_lock = new ReentrantReadWriteLock();
         i_am_leader = false;
         debug_mode = 0;
         store_size = kv_size;
@@ -35,9 +35,9 @@ public class ServerState {
         main_loop = new MainLoop(this);
         main_loop_worker = new Thread (main_loop);
         main_loop_worker.start();
+        request_handler = new RequestHandler(this);
         paxos = new SimplePaxosImpl(this);
-        ordered_request_processor = new OrderedRequestProcessor(this);
         rpc_stubs = new ServerRpcStubs(this);
-        serverSync = new ServerSync(this);
+        consoleConfig = new ConsoleConfig(this);
     }
 }
