@@ -6,6 +6,8 @@ import dadkvs.server.requests.ReadRequest;
 
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This class processes the requests in the order received from the leader.
@@ -15,11 +17,14 @@ public class OrderedRequestProcessor {
     final ServerState server_state;
 
     /** The timestamp of when last write was done */
-    private int                 timestamp;
+    private int timestamp;
 
     private final PriorityQueue<OrdedRequest> request_order;
 
-    private final Object        order_lock = new Object();
+    private final Object queue_lock = new Object();
+
+    /** The read-write lock for the key store */
+    private final ReadWriteLock rwlock;
 
     public OrderedRequestProcessor(ServerState state) {
         this.server_state = state;
@@ -27,6 +32,7 @@ public class OrderedRequestProcessor {
         this.request_order = new PriorityQueue<OrdedRequest>(
                 (o1, o2) -> o1.getRequestSeq() - o2.getRequestSeq()
         );
+        this.rwlock = new ReentrantReadWriteLock();
     }
 
     // ==============================================================================
@@ -42,16 +48,16 @@ public class OrderedRequestProcessor {
      */
     public VersionedValue read(ReadRequest request) {
         // For debug purposes
-        System.out.printf("Read request %d entered the queue\n", request.getReqid());
+        System.out.printf("Read request %d entered the queue\n", request.getRequestId());
 
         // Check if the request is the next in the order
         OrdedRequest nextRequest;
         synchronized (this.request_order) {
             nextRequest = this.request_order.peek();
         }
-        while (nextRequest == null || nextRequest.getRequestId() != request.getReqid()) {
+        while (nextRequest == null || nextRequest.getRequestId() != request.getRequestId()) {
             // For debug purposes
-            System.out.printf("Read request %d waiting\n", request.getReqid());
+            System.out.printf("Read request %d waiting\n", request.getRequestId());
 
             // If not the next in the order, wait for the order to change
             waitForOrder();
@@ -61,7 +67,13 @@ public class OrderedRequestProcessor {
         }
 
         // If the request is the next in the order, process it
-        VersionedValue value = processRead(request);
+        VersionedValue value;
+        this.rwlock.readLock().lock();
+        try {
+            value = processRead(request);
+        } finally {
+            this.rwlock.readLock().unlock();
+        }
 
         // Remove the request from the order queue
         synchronized (this.request_order) {
@@ -72,7 +84,7 @@ public class OrderedRequestProcessor {
         notifyOrderChange();
 
         // For debug purposes
-        System.out.printf("Read request %d processed\n", request.getReqid());
+        System.out.printf("Read request %d processed\n", request.getRequestId());
 
         return value;
     }
@@ -89,16 +101,16 @@ public class OrderedRequestProcessor {
 
     public boolean committx(CommitRequest request) {
         // For debug purposes
-        System.out.printf("Commit request %d entered the queue\n", request.getReqid());
+        System.out.printf("Commit request %d entered the queue\n", request.getRequestId());
 
         // Check if the request is the next in the order
         OrdedRequest nextRequest;
         synchronized (this.request_order) {
             nextRequest = this.request_order.peek();
         }
-        while (nextRequest == null || nextRequest.getRequestId() != request.getReqid()) {
+        while (nextRequest == null || nextRequest.getRequestId() != request.getRequestId()) {
             // For debug purposes
-            System.out.printf("Commit request %d waiting\n", request.getReqid());
+            System.out.printf("Commit request %d waiting\n", request.getRequestId());
 
             // If not the next in the order, wait for the order to change
             waitForOrder();
@@ -108,7 +120,13 @@ public class OrderedRequestProcessor {
         }
 
         // If the request is the next in the order, process it
-        boolean result = processCommit(request);
+        boolean result;
+        this.rwlock.writeLock().lock();
+        try {
+            result = processCommit(request);
+        } finally {
+            this.rwlock.writeLock().unlock();
+        }
 
         // Remove the request from the order queue
         synchronized (this.request_order) {
@@ -119,7 +137,7 @@ public class OrderedRequestProcessor {
         notifyOrderChange();
 
         // For debug purposes
-        System.out.printf("Commit request %d processed\n", request.getReqid());
+        System.out.printf("Commit request %d processed\n", request.getRequestId());
 
         return result;
     }
@@ -133,8 +151,8 @@ public class OrderedRequestProcessor {
         int writeval = request.getWriteValue();
 
         this.timestamp++;
-        TransactionRecord txrecord = new TransactionRecord (key1, version1, key2, version2, writekey, writeval, this.timestamp);
-        boolean result = this.server_state.store.commit (txrecord);
+        TransactionRecord txrecord = new TransactionRecord(key1, version1, key2, version2, writekey, writeval, this.timestamp);
+        boolean result = this.server_state.store.commit(txrecord);
         return result;
     }
 
@@ -143,16 +161,18 @@ public class OrderedRequestProcessor {
     // ==============================================================================
 
     public void addReqOrderList(List<OrdedRequest> orderedRequests) {
+        // TODO: add lock for this method and the one below
         System.out.println("[ORP] Received order list");
         // Add the ordered requests to the order list
         synchronized (this.request_order) {
-            // TODO: verify if the request is already in the queue before adding
+            // TODO: avoid adding duplicates
             this.request_order.addAll(orderedRequests);
         }
         notifyOrderChange();
     }
 
     public void addReqOrder(OrdedRequest orderedRequest) {
+        // TODO: add lock for this method and the one above
         System.out.println("[ORP] Received order " + orderedRequest.getRequestId() + " " + orderedRequest.getRequestSeq());
         // Add the ordered request to the order list
         synchronized (this.request_order) {
@@ -173,9 +193,9 @@ public class OrderedRequestProcessor {
      * for changes in the order list
      */
     private void waitForOrder() {
-        synchronized (this.order_lock) {
+        synchronized (this.queue_lock) {
             try {
-                this.order_lock.wait();
+                this.queue_lock.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -188,8 +208,8 @@ public class OrderedRequestProcessor {
      * next thread waiting for the order list
      */
     private void notifyOrderChange() {
-        synchronized (this.order_lock) {
-            this.order_lock.notifyAll();
+        synchronized (this.queue_lock) {
+            this.queue_lock.notifyAll();
         }
     }
 }
