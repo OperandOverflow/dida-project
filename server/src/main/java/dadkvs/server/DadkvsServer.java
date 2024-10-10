@@ -1,5 +1,9 @@
 package dadkvs.server;
 
+import dadkvs.server.rpc.DadkvsConsoleServiceImpl;
+import dadkvs.server.rpc.DadkvsMainServiceImpl;
+import dadkvs.server.rpc.DadkvsPaxosServiceImpl;
+import dadkvs.server.rpc.DadkvsServerSyncServiceImpl;
 import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;

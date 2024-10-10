@@ -1,16 +1,11 @@
-package dadkvs.server;
+package dadkvs.server.rpc;
 
 import dadkvs.*;
-import dadkvs.server.paxos.PaxosValue;
+import dadkvs.server.ServerState;
 import dadkvs.server.requests.OrdedRequest;
 import io.grpc.stub.StreamObserver;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-
 import java.util.*;
-
-import dadkvs.server.paxos.SimplePaxosImpl;
 
 /**
  * This class implements the gRPC service for the server-to-server
