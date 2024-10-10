@@ -23,14 +23,11 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 		// for debug purposes
 		System.out.println("Receiving read request:" + request);
 
-		if (this.server_state.i_am_leader)
-			this.server_state.serverSync.sendReqOrder(request.getReqid());
-
 		// Convert the request to the internal format
 		ReadRequest readRequest = new ReadRequest(request.getReqid(), request.getKey());
 
 		// Process the request
-		VersionedValue vv = this.server_state.ordered_request_processor.read(readRequest);
+		VersionedValue vv = this.server_state.request_handler.handleReadRequest(readRequest);
 
 		DadkvsMain.ReadReply response =DadkvsMain.ReadReply.newBuilder()
 			.setReqid(request.getReqid()).setValue(vv.getValue()).setTimestamp(vv.getVersion()).build();
@@ -43,9 +40,6 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
     public void committx(DadkvsMain.CommitRequest request, StreamObserver<DadkvsMain.CommitReply> responseObserver) {
 		// for debug purposes
 		System.out.println("Receiving commit request:" + request);
-		if (this.server_state.i_am_leader){
-			this.server_state.serverSync.sendReqOrder(request.getReqid());
-		}
 
 
 		// Convert the request to the internal format
@@ -55,7 +49,7 @@ public class DadkvsMainServiceImpl extends DadkvsMainServiceGrpc.DadkvsMainServi
 					request.getWriteval()
 					);
 
-		boolean result = this.server_state.ordered_request_processor.committx(commitRequest);
+		boolean result = this.server_state.request_handler.handleCommitRequest(commitRequest);
 
 		// for debug purposes
 		System.out.println("Result is ready for request with reqid " + request.getReqid());

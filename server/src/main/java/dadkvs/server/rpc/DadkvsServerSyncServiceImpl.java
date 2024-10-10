@@ -39,7 +39,7 @@ public class DadkvsServerSyncServiceImpl extends DadkvsServerSyncServiceGrpc.Dad
         }
 
         // Notify the request processor about incoming sequenced requests
-        this.server_state.serverSync.receiveReqOrder(orderedRequests);
+        this.server_state.request_handler.addOrderedRequestList(orderedRequests);
 
         // Send empty response to the leader
         DadkvsServerSync.Empty response = DadkvsServerSync.Empty.getDefaultInstance();
