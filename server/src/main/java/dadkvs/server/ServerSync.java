@@ -5,6 +5,9 @@ import dadkvs.server.requests.OrdedRequest;
 
 import java.util.List;
 
+/**
+ * This class handles the synchronization of requests between servers.
+ */
 public class ServerSync {
 
     private ServerState server_state;
@@ -34,10 +37,11 @@ public class ServerSync {
     }
 
     /**
-     * This method receives the ordered requests from the leader.
+     * This method receives the ordered requests from the leader
+     * and adds them to the ordered request processor.
      * @param orderedRequests The list of ordered requests
      */
     public synchronized void receiveReqOrder(List<OrdedRequest> orderedRequests) {
-        server_state.ordered_request_processor.addReqOrderList(orderedRequests);
+        server_state.request_handler.addOrderedRequestList(orderedRequests);
     }
 }
