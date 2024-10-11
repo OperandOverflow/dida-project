@@ -10,14 +10,11 @@ public class RequestHandler {
 
     private final RequestQueue request_queue;
 
-    private final ServerSync server_sync;
-
     private final OrderedRequestProcessor ordered_request_processor;
 
     public RequestHandler(ServerState state) {
         this.server_state = state;
         this.request_queue = new RequestQueue();
-        this.server_sync = new ServerSync(state);
         this.ordered_request_processor = new OrderedRequestProcessor(state);
     }
 
@@ -30,7 +27,7 @@ public class RequestHandler {
         this.server_state.i_am_leader_lock.readLock().lock();
         try {
             if (this.server_state.i_am_leader) {
-                this.server_sync.sendReqOrder(request.getRequestId());
+                this.server_state.server_sync.sendReqOrder(request.getRequestId());
             }
         } finally {
             this.server_state.i_am_leader_lock.readLock().unlock();
@@ -51,7 +48,7 @@ public class RequestHandler {
         this.server_state.i_am_leader_lock.readLock().lock();
         try {
             if (this.server_state.i_am_leader) {
-                this.server_sync.sendReqOrder(request.getRequestId());
+                this.server_state.server_sync.sendReqOrder(request.getRequestId());
             }
         } finally {
             this.server_state.i_am_leader_lock.readLock().unlock();
@@ -90,8 +87,13 @@ public class RequestHandler {
      */
     public void orderAllPendingRequests() {
         List<AbsRequest> pendingRequests = this.getPendingRequests();
+        this.server_state.server_sync.setStopSync(false);
         for (AbsRequest request : pendingRequests) {
-            this.server_sync.sendReqOrder(request.getRequestId());
+            this.server_state.server_sync.sendReqOrder(request.getRequestId());
         }
+    }
+
+    public void stopOrderRequests() {
+        this.server_state.server_sync.setStopSync(true);
     }
 }
