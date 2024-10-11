@@ -19,7 +19,7 @@ public class DadkvsConsoleServiceImpl extends DadkvsConsoleServiceGrpc.DadkvsCon
     @Override
     public void setleader(DadkvsConsole.SetLeaderRequest request, StreamObserver<DadkvsConsole.SetLeaderReply> responseObserver) {
 		// for debug purposes
-		System.out.println(request);
+		//System.out.println(request);
 
 		boolean response_value = true;
 
@@ -41,7 +41,7 @@ public class DadkvsConsoleServiceImpl extends DadkvsConsoleServiceGrpc.DadkvsCon
     @Override
     public void setdebug(DadkvsConsole.SetDebugRequest request, StreamObserver<DadkvsConsole.SetDebugReply> responseObserver) {
 		// for debug purposes
-		System.out.println(request);
+		//System.out.println(request);
 
 		boolean response_value = true;
 

@@ -19,15 +19,15 @@ public class MainLoop implements Runnable  {
     
     
     synchronized public void doWork() {
-		System.out.println("Main loop do work start");
+		//System.out.println("Main loop do work start");
 		this.has_work = false;
 		while (this.has_work == false) {
-			System.out.println("Main loop do work: waiting");
+			//System.out.println("Main loop do work: waiting");
 			try {
 				wait ();
 			} catch (InterruptedException e) { }
 		}
-		System.out.println("Main loop do work finish");
+		//System.out.println("Main loop do work finish");
 	}
 
 	synchronized public void wakeup() {
