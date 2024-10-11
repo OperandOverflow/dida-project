@@ -11,10 +11,17 @@ public interface Paxos {
     /**
      * Propose a value to the other replicas
      * This method is used by the leader.
-     * @param value
-     * @return
+     * @param value The value to propose
+     * @return True if the value has been proposed, false otherwise
      */
-    public boolean propose(PaxosValue value);
+    boolean propose(PaxosValue value);
+
+    /**
+     * Stop the paxos algorithm, aborting the current round if any
+     * and preventing starting any new round.
+     * @param stop True to stop the paxos algorithm, false otherwise
+     */
+    void setStop(boolean stop);
 
 
 
@@ -28,7 +35,7 @@ public interface Paxos {
      * @param prepareMsg The prepare message from the leader
      * @return The promise message to send back to the leader
      */
-    public PromiseMsg prepare(PrepareMsg prepareMsg);
+    PromiseMsg prepare(PrepareMsg prepareMsg);
 
     /**
      * Replica receives an accept message from the leader
@@ -36,7 +43,7 @@ public interface Paxos {
      * @param acceptMsg The accept message from the leader
      * @return The accepted message to send back to the leader
      */
-    public AcceptedMsg accept(AcceptMsg acceptMsg);
+    AcceptedMsg accept(AcceptMsg acceptMsg);
 
     /**
      * Replica receives a learn message from the accepter
@@ -44,5 +51,5 @@ public interface Paxos {
      * @param learnMsg The learn message from the accepter
      * @return The learned message to send back to the accepter
      */
-    public LearnedMsg learn(LearnMsg learnMsg);
+    LearnedMsg learn(LearnMsg learnMsg);
 }

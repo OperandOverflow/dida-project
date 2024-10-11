@@ -24,6 +24,8 @@ public class ConsoleConfig {
                         () -> server_state.request_handler.orderAllPendingRequests()
                 );
                 thread.start();
+            } else {
+                this.server_state.request_handler.stopOrderRequests();
             }
         } finally {
             this.server_state.i_am_leader_lock.writeLock().unlock();
