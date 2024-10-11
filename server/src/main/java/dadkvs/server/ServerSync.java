@@ -10,12 +10,16 @@ import java.util.List;
  */
 public class ServerSync {
 
-    private ServerState server_state;
+    private final ServerState server_state;
 
     private int sequence_number;
 
     public ServerSync(ServerState state) {
         this.server_state = state;
+    }
+
+    public synchronized void setStopSync(boolean stop) {
+        server_state.paxos.setStop(stop);
     }
 
     /**
