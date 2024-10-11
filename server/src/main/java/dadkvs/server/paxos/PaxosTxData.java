@@ -4,6 +4,8 @@ import dadkvs.server.paxos.messages.LearnMsg;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This class holds the data for a paxos round
@@ -31,6 +33,8 @@ public class PaxosTxData {
     /** Final commited value in this round */
     public PaxosValue learnedValue;
 
+    private final ReadWriteLock lock;
+
 
     public PaxosTxData() {
         this.highestSeenRoundNumber = -1;
@@ -40,5 +44,22 @@ public class PaxosTxData {
         this.learnerMsgCount = new ArrayList<>();
         this.isMajorityReached = false;
         this.learnedValue = null;
+        this.lock = new ReentrantReadWriteLock();
+    }
+
+    public void beginRead() {
+        this.lock.readLock().lock();
+    }
+
+    public void endRead() {
+        this.lock.readLock().unlock();
+    }
+
+    public void beginWrite() {
+        this.lock.writeLock().lock();
+    }
+
+    public void endWrite() {
+        this.lock.writeLock().unlock();
     }
 }
