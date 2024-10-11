@@ -24,7 +24,7 @@ public class OrderedRequestProcessor {
     private final Object queue_lock = new Object();
 
     /** The read-write lock for the key store */
-    private final ReadWriteLock rwlock;
+    private final ReadWriteLock ks_rwlock;
 
     public OrderedRequestProcessor(ServerState state) {
         this.server_state = state;
@@ -32,7 +32,7 @@ public class OrderedRequestProcessor {
         this.request_order = new PriorityQueue<OrdedRequest>(
                 (o1, o2) -> o1.getRequestSeq() - o2.getRequestSeq()
         );
-        this.rwlock = new ReentrantReadWriteLock();
+        this.ks_rwlock = new ReentrantReadWriteLock();
     }
 
     // ==============================================================================
@@ -68,11 +68,11 @@ public class OrderedRequestProcessor {
 
         // If the request is the next in the order, process it
         VersionedValue value;
-        this.rwlock.readLock().lock();
+        this.ks_rwlock.readLock().lock();
         try {
             value = processRead(request);
         } finally {
-            this.rwlock.readLock().unlock();
+            this.ks_rwlock.readLock().unlock();
         }
 
         // Remove the request from the order queue
@@ -121,11 +121,11 @@ public class OrderedRequestProcessor {
 
         // If the request is the next in the order, process it
         boolean result;
-        this.rwlock.writeLock().lock();
+        this.ks_rwlock.writeLock().lock();
         try {
             result = processCommit(request);
         } finally {
-            this.rwlock.writeLock().unlock();
+            this.ks_rwlock.writeLock().unlock();
         }
 
         // Remove the request from the order queue
@@ -161,25 +161,28 @@ public class OrderedRequestProcessor {
     // ==============================================================================
 
     public void addReqOrderList(List<OrdedRequest> orderedRequests) {
-        // TODO: add lock for this method and the one below
         System.out.println("[ORP] Received order list");
         // Add the ordered requests to the order list
         synchronized (this.request_order) {
             // TODO: avoid adding duplicates
             this.request_order.addAll(orderedRequests);
+            System.out.println("[ORP] Order list:");
+            for (OrdedRequest req : this.request_order) {
+                System.out.println("       ReqId:" + req.getRequestId() + " Seq:" + req.getRequestSeq());
+            }
         }
         notifyOrderChange();
     }
 
     public void addReqOrder(OrdedRequest orderedRequest) {
-        // TODO: add lock for this method and the one above
         System.out.println("[ORP] Received order " + orderedRequest.getRequestId() + " " + orderedRequest.getRequestSeq());
         // Add the ordered request to the order list
         synchronized (this.request_order) {
             this.request_order.add(orderedRequest);
-        }
-        for (OrdedRequest req : this.request_order) {
-            System.out.println("[ORP] Order id:" + req.getRequestId() + " seq:" + req.getRequestSeq());
+            System.out.println("[ORP] Order list:");
+            for (OrdedRequest req : this.request_order) {
+                System.out.println("       ReqId:" + req.getRequestId() + " Seq:" + req.getRequestSeq());
+            }
         }
         notifyOrderChange();
     }
