@@ -18,6 +18,7 @@ public class ServerState {
     public Thread          main_loop_worker;
     public RequestHandler  request_handler;
     public Paxos           paxos;
+    public ServerSync      server_sync;
     public ServerRpcStubs  rpc_stubs;
     public ConsoleConfig   consoleConfig;
 
@@ -35,9 +36,10 @@ public class ServerState {
         main_loop = new MainLoop(this);
         main_loop_worker = new Thread (main_loop);
         main_loop_worker.start();
+        rpc_stubs = new ServerRpcStubs(this);
         request_handler = new RequestHandler(this);
         paxos = new SimplePaxosImpl(this);
-        rpc_stubs = new ServerRpcStubs(this);
+        server_sync = new ServerSync(this);
         consoleConfig = new ConsoleConfig(this);
     }
 }
