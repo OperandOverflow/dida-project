@@ -17,4 +17,10 @@ public class Proposer {
         this.MAJORITY = serverState.n_servers / 2 + 1;
         this.rpc = new SimplePaxosRPC(serverState);
     }
+
+    //propose function
+
+
+
+    //commit function
 }

@@ -106,8 +106,7 @@ public class Acceptor {
         // Reply with a affirmative accept
         acceptedMsg.accepted = true;
         // Send learn message to all learners
-        // TODO: Correct the implementation of rpc
-        //rpc.invokeLearn(consensusIndex, roundNumber, value);
+        rpc.invokeLearn(consensusIndex, roundNumber, value);
         return acceptedMsg;
     }
 

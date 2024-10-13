@@ -8,25 +8,20 @@ public class PrepareMsg {
     /** phase1index */
     public int roundNumber;
 
-    /** phase1timestamp */
-    public int leaderId;
-
+    /** phas1ConsensusNumber aka leaderId */
+    public int consensusNumber;
     /** phase1config */
     public int configNumber;
 
-    public int transactionNumber;
-
     public PrepareMsg() {
+        this.consensusNumber = -1;
         this.roundNumber = -1;
-        this.leaderId = -1;
         this.configNumber = -1;
-        this.transactionNumber = -1;
     }
 
-    public PrepareMsg(int roundNumber, int leaderId, int configNumber, int transactionNumber) {
+    public PrepareMsg(int consensusNumber, int roundNumber, int configNumber) {
+        this.consensusNumber = consensusNumber;
         this.roundNumber = roundNumber;
-        this.leaderId = leaderId;
         this.configNumber = configNumber;
-        this.transactionNumber = transactionNumber;
     }
 }

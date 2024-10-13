@@ -9,6 +9,7 @@ import dadkvs.server.requests.OrdedRequest;
 import dadkvs.util.CollectorStreamObserver;
 import dadkvs.util.GenericResponseCollector;
 import io.grpc.stub.StreamObserver;
+import dadkvs.server.paxos.PaxosValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,6 @@ public class SimplePaxosRPC {
 
     public List<PromiseMsg> invokePrepare(int transactionNumber,int roundNumber, int leaderId, int config) {
         DadkvsPaxos.PhaseOneRequest phaseOneRequest = DadkvsPaxos.PhaseOneRequest.newBuilder()
-                                                                .setPhase1Txid(transactionNumber)
                                                                 .setPhase1Config(config)
                                                                 .setPhase1Index(leaderId)
                                                                 .setPhase1Timestamp(roundNumber)
@@ -48,7 +48,6 @@ public class SimplePaxosRPC {
 
     public List<AcceptedMsg> invokeAccept(int transactionNumber, int roundNumber, int leaderId, int config, PaxosValue value) {
         DadkvsPaxos.PhaseTwoRequest phaseTwoRequest = DadkvsPaxos.PhaseTwoRequest.newBuilder()
-                                                                .setPhase2Txid(transactionNumber)
                                                                 .setPhase2Config(config)
                                                                 .setPhase2Index(leaderId) //paxos round
                                                                 .setPhase2Timestamp(roundNumber) //leader
@@ -72,12 +71,10 @@ public class SimplePaxosRPC {
         return accepted;
     }
 
-    public List<LearnedMsg> invokeLearn(int transactionNumber, int roundNumber, int leaderId, int config, PaxosValue value) {
+    public List<LearnedMsg> invokeLearn(int consensusIndex, int roundNumber, PaxosValue value) {
         DadkvsPaxos.LearnRequest learnRequest = DadkvsPaxos.LearnRequest.newBuilder()
-                                                .setLearntxid(transactionNumber)
-                                                .setLearnconfig(config)
-                                                .setLearnindex(leaderId) //paxos round
-                                                .setLearntimestamp(roundNumber) //leader
+                                                .setLearntimestamp(consensusIndex)//consensus index aka leaderId % 5
+                                                .setLearnindex(roundNumber) //leader
                                                 .setLearnvalue(DadkvsPaxos.PaxosValue.newBuilder()
                                                         .setRequestid(value.getValue().getRequestId())
                                                         .setRequestseq(value.getValue().getRequestSeq())

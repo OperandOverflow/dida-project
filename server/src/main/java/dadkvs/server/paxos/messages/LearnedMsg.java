@@ -8,7 +8,7 @@ public class LearnedMsg {
     /**
      * learnindex
      */
-    public int leaderId;
+    public int consensusNumber;
 
     /**
      * learnconfig
@@ -21,13 +21,13 @@ public class LearnedMsg {
     public boolean accepted;
 
     public LearnedMsg() {
-        this.leaderId = -1;
+        this.consensusNumber = -1;
         this.configNumber = -1;
         this.accepted = false;
     }
 
-    public LearnedMsg(int leaderId, int configNumber, boolean accepted) {
-        this.leaderId = leaderId;
+    public LearnedMsg(int consensusNumber, int configNumber, boolean accepted) {
+        this.consensusNumber = consensusNumber;
         this.configNumber = configNumber;
         this.accepted = accepted;
     }
