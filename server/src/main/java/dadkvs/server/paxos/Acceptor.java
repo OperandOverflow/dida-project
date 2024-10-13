@@ -40,12 +40,12 @@ public class Acceptor {
             acceptorData = new AcceptorData();
             acceptorData.highestPromisedRoundNumber = -1;
             acceptorData.acceptedRoundNumber = -1;
-            acceptorData.acceptedValue = null;
+            acceptorData.acceptedValue = -1;
             this.acceptorRecord.put(consensusIndex, acceptorData);
 
             // Reply with a affirmative promise
             promiseMsg.accepted = true;
-            promiseMsg.prevAcceptedValue = null;
+            promiseMsg.prevAcceptedValue = -1;
             promiseMsg.prevAcceptedRoundNumber = -1;
             return promiseMsg;
         }
@@ -55,7 +55,7 @@ public class Acceptor {
         if (roundNumber < acceptorData.highestPromisedRoundNumber) {
             // Reply with a negative promise
             promiseMsg.accepted = false;
-            promiseMsg.prevAcceptedValue = null;
+            promiseMsg.prevAcceptedValue = -1;
             promiseMsg.prevAcceptedRoundNumber = -1;
             return promiseMsg;
         }
@@ -74,7 +74,7 @@ public class Acceptor {
         int consensusIndex = acceptMsg.consensusNumber;
         int roundNumber = acceptMsg.roundNumber;
         int config = acceptMsg.configNumber;
-        PaxosValue value = acceptMsg.proposedValue;
+        int value = acceptMsg.proposedValue;
 
         AcceptedMsg acceptedMsg = new AcceptedMsg();
         acceptedMsg.consensusNumber = consensusIndex;
@@ -106,7 +106,7 @@ public class Acceptor {
         // Reply with a affirmative accept
         acceptedMsg.accepted = true;
         // Send learn message to all learners
-        rpc.invokeLearn(consensusIndex, roundNumber, value);
+        //rpc.invokeLearn(consensusIndex, roundNumber, value);
         return acceptedMsg;
     }
 
@@ -120,6 +120,6 @@ public class Acceptor {
 
         public int acceptedRoundNumber;
 
-        public PaxosValue acceptedValue;
+        public int acceptedValue;
     }
 }

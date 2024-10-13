@@ -27,7 +27,7 @@ public class Learner {
         int consensusIndex = learnMsg.consensusNumber;
         int roundNumber = learnMsg.roundNumber;
         int config = learnMsg.configNumber;
-        PaxosValue value = learnMsg.learnedValue;
+        int value = learnMsg.learnedValue;
 
         LearnedMsg learnedMsg = new LearnedMsg();
         learnedMsg.consensusNumber = consensusIndex;
@@ -82,7 +82,8 @@ public class Learner {
 
         public int highestReceivedRoundNumber;
 
-        public Hashtable<PaxosValue, Integer> receivedValues;
+        // Value -> Count
+        public Hashtable<Integer, Integer> receivedValues;
 
         public LearnerData() {
             this.receivedValues = new Hashtable<>();
