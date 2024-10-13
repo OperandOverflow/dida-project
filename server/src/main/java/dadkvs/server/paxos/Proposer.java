@@ -4,8 +4,10 @@ import dadkvs.server.ServerState;
 import dadkvs.server.paxos.messages.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.ceil;
 
@@ -21,8 +23,6 @@ public class Proposer {
 
     private int consensusNumber = 0;
 
-    private int proposal_number = 0;
-
     public Proposer(ServerState serverState) {
         this.serverState = serverState;
         this.MAJORITY = serverState.n_servers / 2 + 1;
@@ -31,90 +31,76 @@ public class Proposer {
     }
 
     //propose function
-    public synchronized PrepareMsg propose(int client_value){
+    public synchronized void propose(int client_value){
+        // Increment the consensus number
         this.consensusNumber++;
 
+        // Create a new structure to hold the data
         ProposerData proposerData = new ProposerData();
+        proposerData.roundNumber = this.serverState.my_id;
+        proposerData.proposedValue = client_value;
+        this.proposerRecord.put(this.consensusNumber, proposerData);
 
-        this.proposal_number++;
-        this.proposed_value = client_value;
-        List<PromiseMsg> potential_promise = new ArrayList<>();
-        potential_promise = rpc.invokePrepare();
+        boolean finished = false;
+        // Begin loop while not accepted
+        while (!finished) {
+            // Increment the round number
+            proposerData.roundNumber += this.serverState.n_servers;
 
+            // Send the Prepare message to all acceptors
+            // TODO: correct the invocation of the method
+            List<PromiseMsg> prepare_resp = rpc.invokePrepare();
 
-        //after receiving the promises
-        for(int i = 0; i < potential_promise.size(); i++){
-            if(potential_promise.get(i).consensusNumber != proposal_number){
-                potential_promise.remove(i); //To check the message is from the same consensus, cause messages can be delayed
+            // Count the number of affirmative promises
+            List<PromiseMsg> promises = prepare_resp.stream()
+                                                    .filter(promise -> promise.accepted)
+                                                    .toList();
+            // If the number of promises is smaller than the majority
+            if (promises.size() < MAJORITY) {
+                // Retry with higher round number
+                continue;
             }
-        }
-        promises = potential_promise;
-        if(promises.size() == ceil(MAJORITY)){
-            //I want to check the max value of the promise
-            int maxPrevAcceptedValue = getMaxPrevAcceptedValue(promises);
-            if (maxPrevAcceptedValue != -1) {
-                // Do something with maxPrevAcceptedValue, or propose it
-                // as the value to be accepted.
-                this.proposed_value = maxPrevAcceptedValue;
+
+            // If the number of promises is equal or greater than the majority
+            // Find the accepted value with the highest round number among the promises
+            int mostRecentValue = promises.stream()
+                                          .max(Comparator.comparingInt(p -> p.prevAcceptedRoundNumber))
+                                          .map(promise -> promise.prevAcceptedValue)
+                                          .orElse(-1);
+
+            // If there is an accepted value with a higher round number
+            if (mostRecentValue != -1) {
+                // Propose the most recent value
+                proposerData.proposedValue = mostRecentValue;
             } else {
-                // No previous accepted value, propose client_value as the value
+                // Propose the client value
+                proposerData.proposedValue = client_value;
             }
 
-        }
-        rpc.invokeAccept();
+            // Send the Accept message to all acceptors
+            List<AcceptedMsg> accept_resp = rpc.invokeAccept();
 
-    }
-
-    // New helper function to find the max prevAcceptedValue
-    private int getMaxPrevAcceptedValue(List<PromiseMsg> promises) {
-        int maxValue = -1;
-        int maxRoundNumber = -1;
-
-        for (PromiseMsg promise : promises) {
-            // Check if the promise had an accepted value
-            if (promise.accepted && promise.prevAcceptedValue != -1) {
-                // Compare based on prevAcceptedRoundNumber
-                if (promise.prevAcceptedRoundNumber > maxRoundNumber) {
-                    maxRoundNumber = promise.prevAcceptedRoundNumber;
-                    maxValue = promise.prevAcceptedValue;
-                }
+            // Count the number of affirmative accepts
+            List<AcceptedMsg> accepts = accept_resp.stream()
+                    .filter(accepted -> accepted.accepted)
+                    .toList();
+            // If the number of accepts is smaller than the majority
+            if (accepts.size() < MAJORITY) {
+                // Retry with higher round number
+                continue;
             }
-        }
 
-        return maxValue;
+            // If the number of accepts is equal or greater than the majority
+            // The value is accepted
+            finished = true;
+        }
     }
 
-
-    //commit function
-    public synchronized AcceptMsg accept(){
-
-        AcceptMsg msg = new AcceptMsg(proposal_number, acceptor_acks, MAJORITY, proposed_value);
-
-         // SEND THE ACCEPT MESSAGE TO ACCEPTORS
-        List<AcceptedMsg> acks = rpc.invokeAccept();
-
-        // hOW MANY ACCEPTORS ACCEPTED THE VALUE
-        acceptor_acks = 0;
-        for (AcceptedMsg ack : acks) {
-            if (ack.accepted) {
-                acceptor_acks++;
-            }
-        }
-
-        if (acceptor_acks >= MAJORITY) {
-            System.out.println("Proposal accepted by the majority!");
-        } else {
-            System.out.println("Proposal not accepted by the majority. Retry or choose another value.");
-        }
-    
-        return msg;
-    }
-
-    private class ProposerData {
-
-        public int proposedValue;
+    private static class ProposerData {
 
         public int roundNumber;
+
+        public int proposedValue;
 
         public List<PromiseMsg> promises;
 
