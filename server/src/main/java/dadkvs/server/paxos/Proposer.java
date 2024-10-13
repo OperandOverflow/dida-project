@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static java.lang.Math.ceil;
 
 public class Proposer {
 
@@ -17,7 +14,7 @@ public class Proposer {
 
     private final int MAJORITY;
 
-    private final SimplePaxosRPC rpc;
+    private final PaxosRPC rpc;
 
     private final Hashtable<Integer, ProposerData> proposerRecord;
 
@@ -26,7 +23,7 @@ public class Proposer {
     public Proposer(ServerState serverState) {
         this.serverState = serverState;
         this.MAJORITY = serverState.n_servers / 2 + 1;
-        this.rpc = new SimplePaxosRPC(serverState);
+        this.rpc = new PaxosRPC(serverState);
         this.proposerRecord = new Hashtable<>();
     }
 
@@ -48,8 +45,11 @@ public class Proposer {
             proposerData.roundNumber += this.serverState.n_servers;
 
             // Send the Prepare message to all acceptors
-            // TODO: correct the invocation of the method
-            List<PromiseMsg> prepare_resp = rpc.invokePrepare();
+            // TODO: add config number
+            List<PromiseMsg> prepare_resp = rpc.invokePrepare(
+                                                this.consensusNumber,
+                                                proposerData.roundNumber,
+                                                0);
 
             // Count the number of affirmative promises
             List<PromiseMsg> promises = prepare_resp.stream()
@@ -78,7 +78,11 @@ public class Proposer {
             }
 
             // Send the Accept message to all acceptors
-            List<AcceptedMsg> accept_resp = rpc.invokeAccept();
+            List<AcceptedMsg> accept_resp = rpc.invokeAccept(
+                                                    this.consensusNumber,
+                                                    proposerData.roundNumber,
+                                                    0,
+                                                    proposerData.proposedValue);
 
             // Count the number of affirmative accepts
             List<AcceptedMsg> accepts = accept_resp.stream()
