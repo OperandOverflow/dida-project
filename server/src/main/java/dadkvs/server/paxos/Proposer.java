@@ -92,7 +92,7 @@ public class Proposer {
         AcceptMsg msg = new AcceptMsg(proposal_number, acceptor_acks, MAJORITY, proposed_value);
 
          // SEND THE ACCEPT MESSAGE TO ACCEPTORS
-        List<AcceptedMsg> acks = rpc.invokeAccept(proposed_value, proposal_number, acceptor_acks, MAJORITY, null);
+        List<AcceptedMsg> acks = rpc.invokeAccept();
 
         // hOW MANY ACCEPTORS ACCEPTED THE VALUE
         acceptor_acks = 0;
