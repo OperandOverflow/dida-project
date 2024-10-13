@@ -1,6 +1,7 @@
 package dadkvs.server.paxos;
 
 import dadkvs.server.ServerState;
+import dadkvs.server.paxos.messages.*;
 
 import java.util.Hashtable;
 
@@ -19,8 +20,15 @@ public class Proposer {
     }
 
     //propose function
-
+    public synchronized PrepareMsg propose(){
+        PrepareMsg msg = new PrepareMsg();
+        return msg;
+    }
 
 
     //commit function
+    public synchronized AcceptMsg accept(){
+        AcceptMsg msg = new AcceptMsg();
+        return msg;
+    }
 }
