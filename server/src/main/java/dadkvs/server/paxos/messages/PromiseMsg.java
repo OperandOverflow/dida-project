@@ -8,7 +8,7 @@ import dadkvs.server.paxos.PaxosValue;
 public class PromiseMsg {
 
     /** phase1index */
-    public int leaderId;
+    public int consensusNumber;
 
     /** phase1config */
     public int configNumber;
@@ -20,11 +20,11 @@ public class PromiseMsg {
     public int prevAcceptedRoundNumber;
 
     /** phase1value */
-    public PaxosValue prevAcceptedValue;
+    public int prevAcceptedValue;
 
-    public PromiseMsg(int prevRoundNumber, int leaderId, int configNumber, boolean accepted, PaxosValue prevAcceptedValue) {
+    public PromiseMsg(int prevRoundNumber, int consensusNumber, int configNumber, boolean accepted, int prevAcceptedValue) {
         this.prevAcceptedRoundNumber = prevRoundNumber;
-        this.leaderId = leaderId;
+        this.consensusNumber = consensusNumber;
         this.configNumber = configNumber;
         this.accepted = accepted;
         this.prevAcceptedValue = prevAcceptedValue;
@@ -32,9 +32,9 @@ public class PromiseMsg {
 
     public PromiseMsg() {
         this.prevAcceptedRoundNumber = -1;
-        this.leaderId = -1;
+        this.consensusNumber = -1;
         this.configNumber = -1;
         this.accepted = false;
-        this.prevAcceptedValue = null;
+        this.prevAcceptedValue = -1;
     }
 }

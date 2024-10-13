@@ -8,7 +8,7 @@ public class AcceptedMsg {
     /**
      * phase2index
      */
-    public int leaderId;
+    public int consensusNumber;
 
     /**
      * phase2config
@@ -20,14 +20,14 @@ public class AcceptedMsg {
      */
     public boolean accepted;
 
-    public AcceptedMsg(int leaderId, int configNumber, boolean accepted) {
-        this.leaderId = leaderId;
+    public AcceptedMsg(int consensusNumber, int configNumber, boolean accepted) {
+        this.consensusNumber = consensusNumber;
         this.configNumber = configNumber;
         this.accepted = accepted;
     }
 
     public AcceptedMsg() {
-        this.leaderId = -1;
+        this.consensusNumber = -1;
         this.configNumber = -1;
         this.accepted = false;
     }

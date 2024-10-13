@@ -10,7 +10,7 @@ public class LearnMsg {
     /**
      * learnindex
      */
-    public int leaderId;
+    public int consensusNumber;
 
     /**
      * learntimestamp
@@ -25,23 +25,19 @@ public class LearnMsg {
     /**
      * learnvalue
      */
-    public PaxosValue learnedValue;
-
-    public int transactionNumber;
+    public int learnedValue;
 
     public LearnMsg() {
-        this.leaderId = -1;
+        this.consensusNumber = -1;
         this.roundNumber = -1;
         this.configNumber = -1;
-        this.learnedValue = null;
-        this.transactionNumber = -1;
+        this.learnedValue = -1;
     }
 
-    public LearnMsg(int roundNumber, int leaderId, int configNumber, PaxosValue learnedValue, int transactionNumber) {
-        this.leaderId = leaderId;
+    public LearnMsg(int roundNumber, int consensusNumber, int configNumber, int learnedValue) {
+        this.consensusNumber = consensusNumber;
         this.roundNumber = roundNumber;
         this.configNumber = configNumber;
         this.learnedValue = learnedValue;
-        this.transactionNumber = transactionNumber;
     }
 }
