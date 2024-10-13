@@ -88,7 +88,26 @@ public class Proposer {
 
     //commit function
     public synchronized AcceptMsg accept(){
-        AcceptMsg msg = new AcceptMsg();
+
+        AcceptMsg msg = new AcceptMsg(proposal_number, acceptor_acks, MAJORITY, proposed_value);
+
+         // SEND THE ACCEPT MESSAGE TO ACCEPTORS
+        List<AcceptedMsg> acks = rpc.invokeAccept();
+
+        // hOW MANY ACCEPTORS ACCEPTED THE VALUE
+        acceptor_acks = 0;
+        for (AcceptedMsg ack : acks) {
+            if (ack.accepted) {
+                acceptor_acks++;
+            }
+        }
+
+        if (acceptor_acks >= MAJORITY) {
+            System.out.println("Proposal accepted by the majority!");
+        } else {
+            System.out.println("Proposal not accepted by the majority. Retry or choose another value.");
+        }
+    
         return msg;
     }
 }
