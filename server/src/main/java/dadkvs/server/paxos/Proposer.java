@@ -17,26 +17,25 @@ public class Proposer {
 
     private final SimplePaxosRPC rpc;
 
-    private int proposal_number;
+    private final Hashtable<Integer, ProposerData> proposerRecord;
 
-    private int proposed_value;
+    private int consensusNumber = 0;
 
-    private int acceptor_acks;
-
-    private List<PromiseMsg> promises;
+    private int proposal_number = 0;
 
     public Proposer(ServerState serverState) {
         this.serverState = serverState;
         this.MAJORITY = serverState.n_servers / 2 + 1;
         this.rpc = new SimplePaxosRPC(serverState);
-        this.proposal_number = 0;
-        this.acceptor_acks = 0;
-        this.proposed_value = -1;
-        this.promises = new ArrayList<>();
+        this.proposerRecord = new Hashtable<>();
     }
 
     //propose function
     public synchronized PrepareMsg propose(int client_value){
+        this.consensusNumber++;
+
+        ProposerData proposerData = new ProposerData();
+
         this.proposal_number++;
         this.proposed_value = client_value;
         List<PromiseMsg> potential_promise = new ArrayList<>();
@@ -109,5 +108,23 @@ public class Proposer {
         }
     
         return msg;
+    }
+
+    private class ProposerData {
+
+        public int proposedValue;
+
+        public int roundNumber;
+
+        public List<PromiseMsg> promises;
+
+        public List<AcceptedMsg> accepted;
+
+        public ProposerData() {
+            this.proposedValue = -1;
+            this.roundNumber = -1;
+            this.promises = new ArrayList<>();
+            this.accepted = new ArrayList<>();
+        }
     }
 }
