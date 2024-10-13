@@ -1,7 +1,5 @@
 package dadkvs.server.paxos.messages;
 
-import dadkvs.server.paxos.PaxosValue;
-
 /**
  * This class is equivalent to the PhaseTwoRequest message in DadkvsPaxos.proto
  */
