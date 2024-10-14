@@ -59,15 +59,13 @@ public class Learner {
         learnerData.highestReceivedRoundNumber = roundNumber;
 
         // Update the received values
-        if (learnerData.receivedValues.containsKey(value)) {
-            learnerData.receivedValues.put(value, learnerData.receivedValues.get(value) + 1);
-        } else {
-            learnerData.receivedValues.put(value, 1);
-        }
+        int counter = learnerData.receivedValues.getOrDefault(value, 0);
+        learnerData.receivedValues.put(value, counter + 1);
 
-        // If the majority of the acceptors have sent the same value
-        if (learnerData.receivedValues.get(value) >= this.MAJORITY) {
-            // TODO: deliver the value to the application
+        // If the majority of the acceptors have sent the same value for the first time
+        if (counter + 1 >= this.MAJORITY && counter < this.MAJORITY) {
+            // Deliver the value to the application
+            serverState.request_handler.addReqToQueue(value);
         }
         // Reply with a affirmative learned
         learnedMsg.accepted = true;

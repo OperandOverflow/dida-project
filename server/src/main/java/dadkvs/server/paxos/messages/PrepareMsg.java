@@ -20,9 +20,9 @@ public class PrepareMsg {
         this.configNumber = -1;
     }
 
-    public PrepareMsg(int roundNumber, int leaderId, int configNumber) {
-        this.consensusNumber = roundNumber;
-        this.roundNumber = leaderId;
+    public PrepareMsg(int consensusNumber, int roundNumber, int configNumber) {
+        this.consensusNumber = consensusNumber;
+        this.roundNumber = roundNumber;
         this.configNumber = configNumber;
     }
 }

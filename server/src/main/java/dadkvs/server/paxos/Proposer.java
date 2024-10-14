@@ -36,8 +36,8 @@ public class Proposer {
         this.proposerRecord.put(this.consensusNumber, proposerData);
 
         boolean finished = false;
-        // Begin loop while not accepted
-        while (!finished) {
+        // Begin loop while not accepted and while I am the leader
+        while (!finished && serverState.i_am_leader.get()) {
             // Increment the round number
             proposerData.roundNumber += this.serverState.n_servers;
 
@@ -54,6 +54,7 @@ public class Proposer {
                                                     .toList();
             // If the number of promises is smaller than the majority
             if (promises.size() < MAJORITY) {
+                System.out.println("[Prop] Not enough promises: Received " + promises.size() + " promises, expected " + MAJORITY);
                 // Retry with higher round number
                 continue;
             }
@@ -87,6 +88,7 @@ public class Proposer {
                     .toList();
             // If the number of accepts is smaller than the majority
             if (accepts.size() < MAJORITY) {
+                System.out.println("[Prop] Not enough accepts: Received " + accepts.size() + " accepts, expected " + MAJORITY);
                 // Retry with higher round number
                 continue;
             }

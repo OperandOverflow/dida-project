@@ -3,7 +3,6 @@ package dadkvs.server;
 import dadkvs.server.rpc.DadkvsConsoleServiceImpl;
 import dadkvs.server.rpc.DadkvsMainServiceImpl;
 import dadkvs.server.rpc.DadkvsPaxosServiceImpl;
-import dadkvs.server.rpc.DadkvsServerSyncServiceImpl;
 import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -44,14 +43,12 @@ public class DadkvsServer {
 		final BindableService service_impl = new DadkvsMainServiceImpl(server_state);
 		final BindableService console_impl = new DadkvsConsoleServiceImpl(server_state);
 		final BindableService paxos_impl   = new DadkvsPaxosServiceImpl(server_state);
-		final BindableService sync_impl    = new DadkvsServerSyncServiceImpl(server_state);
 
 		// Create a new server to listen on port.
 		Server server = ServerBuilder.forPort(port)
 									 .addService(service_impl)
 				                 	 .addService(console_impl)
 									 .addService(paxos_impl)
-									 .addService(sync_impl)
 				  					 .build();
 		// Start the server.
 		server.start();

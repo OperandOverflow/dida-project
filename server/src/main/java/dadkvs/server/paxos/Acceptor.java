@@ -30,12 +30,11 @@ public class Acceptor {
 
         // If the consensus data is not found, i.e. it's a new consensus
         if (acceptorData == null) {
+            System.out.println("[Acce] Creating a new record for: " + consensusIndex);
             // Create a new structure to hold the data
-            acceptorData = new AcceptorData();
-            acceptorData.highestPromisedRoundNumber = -1;
-            acceptorData.acceptedRoundNumber = -1;
-            acceptorData.acceptedValue = -1;
-            this.acceptorRecord.put(consensusIndex, acceptorData);
+            AcceptorData newAcceptorData = new AcceptorData();
+            newAcceptorData.highestPromisedRoundNumber = roundNumber;
+            this.acceptorRecord.put(consensusIndex, newAcceptorData);
 
             // Reply with a affirmative promise
             promiseMsg.accepted = true;
@@ -51,6 +50,8 @@ public class Acceptor {
             promiseMsg.accepted = false;
             promiseMsg.prevAcceptedValue = -1;
             promiseMsg.prevAcceptedRoundNumber = -1;
+            System.out.println("[Acce] Current round number lower than the highest seen");
+            System.out.println("       Round number: " + roundNumber + " Seen number: " + acceptorData.highestPromisedRoundNumber);
             return promiseMsg;
         }
 
@@ -81,6 +82,7 @@ public class Acceptor {
         if (acceptorData == null) {
             // Reply with a negative accept
             acceptedMsg.accepted = false;
+            System.out.println("[Acc] No prepare received for consensus: " + consensusIndex);
             return acceptedMsg;
         }
 
@@ -89,6 +91,8 @@ public class Acceptor {
         if (roundNumber < acceptorData.highestPromisedRoundNumber) {
             // Reply with a negative accept
             acceptedMsg.accepted = false;
+            System.out.println("[Acce] Current round number lower than the highest seen");
+            System.out.println("       Round number: " + roundNumber + " Seen number: " + acceptorData.highestPromisedRoundNumber);
             return acceptedMsg;
         }
 
@@ -116,5 +120,11 @@ public class Acceptor {
         public int acceptedRoundNumber;
 
         public int acceptedValue;
+
+        public AcceptorData() {
+            this.highestPromisedRoundNumber = -1;
+            this.acceptedRoundNumber = -1;
+            this.acceptedValue = -1;
+        }
     }
 }

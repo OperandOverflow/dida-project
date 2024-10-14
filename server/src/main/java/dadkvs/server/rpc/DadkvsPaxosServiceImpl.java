@@ -28,7 +28,7 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
         int phase1index = request.getPhase1Index();
         int phase1timestamp = request.getPhase1Timestamp();
 
-        PrepareMsg prepareMsg = new PrepareMsg(phase1timestamp, phase1index, phase1config);
+        PrepareMsg prepareMsg = new PrepareMsg(phase1index, phase1timestamp, phase1config);
 
         PromiseMsg promiseMsg = server_state.acceptor.prepare(prepareMsg);
 

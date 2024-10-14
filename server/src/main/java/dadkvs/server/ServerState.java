@@ -1,12 +1,12 @@
 package dadkvs.server;
 
 import dadkvs.server.paxos.*;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import dadkvs.server.rpc.PaxosRPC;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerState {
-    public ReadWriteLock   i_am_leader_lock;
-    public boolean         i_am_leader;
+    public AtomicBoolean   i_am_leader;
     public int             debug_mode;
     public int             base_port;
     public int             my_id;
@@ -16,18 +16,20 @@ public class ServerState {
     public KeyValueStore   store;
     public MainLoop        main_loop;
     public Thread          main_loop_worker;
+
     public RequestHandler  request_handler;
-    public Paxos           paxos;
-    public ServerSync      server_sync;
-    public ServerRpcStubs  rpc_stubs;
     public ConsoleConfig   consoleConfig;
+
+    public PaxosRPC        paxos_rpc;
+    public Proposer        proposer;
+    public Acceptor        acceptor;
+    public Learner         learner;
 
     
     public ServerState(int kv_size, int port, int myself) {
         base_port = port;
         my_id = myself;
-        i_am_leader_lock = new ReentrantReadWriteLock();
-        i_am_leader = false;
+        i_am_leader = new AtomicBoolean(false);
         debug_mode = 0;
         store_size = kv_size;
         n_servers = 5;
@@ -36,10 +38,13 @@ public class ServerState {
         main_loop = new MainLoop(this);
         main_loop_worker = new Thread (main_loop);
         main_loop_worker.start();
-        rpc_stubs = new ServerRpcStubs(this);
+
         request_handler = new RequestHandler(this);
-        paxos = new SimplePaxosImpl(this);
-        server_sync = new ServerSync(this);
         consoleConfig = new ConsoleConfig(this);
+
+        paxos_rpc = new PaxosRPC(this);
+        proposer = new Proposer(this);
+        acceptor = new Acceptor(this);
+        learner = new Learner(this);
     }
 }

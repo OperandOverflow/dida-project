@@ -16,19 +16,14 @@ public class ConsoleConfig {
      * @param isLeader The leader status of the server.
      */
     public void setLeader(boolean isLeader) {
-        this.server_state.i_am_leader_lock.writeLock().lock();
-        try {
-            this.server_state.i_am_leader = isLeader;
-            if (isLeader) {
-                Thread thread = new Thread(
-                        () -> server_state.request_handler.orderAllPendingRequests()
-                );
-                thread.start();
-            } else {
-                this.server_state.request_handler.stopOrderRequests();
-            }
-        } finally {
-            this.server_state.i_am_leader_lock.writeLock().unlock();
+        this.server_state.i_am_leader.set(isLeader);
+        if (isLeader) {
+            Thread thread = new Thread(
+                    () -> server_state.request_handler.startOrderRequests()
+            );
+            thread.start();
+        } else {
+            this.server_state.request_handler.stopOrderRequests();
         }
     }
 

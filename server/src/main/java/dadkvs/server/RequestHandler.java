@@ -24,19 +24,7 @@ public class RequestHandler {
      * @return The value associated with the key or null if the key is not found.
      */
     public VersionedValue handleReadRequest(ReadRequest request) {
-        this.server_state.i_am_leader_lock.readLock().lock();
-        try {
-            if (this.server_state.i_am_leader) {
-                this.server_state.server_sync.sendReqOrder(request.getRequestId());
-            }
-        } finally {
-            this.server_state.i_am_leader_lock.readLock().unlock();
-        }
-
-        this.request_queue.addRequest(request);
-        VersionedValue value = this.ordered_request_processor.read(request);
-        this.request_queue.removeRequest(request);
-        return value;
+        return this.ordered_request_processor.read(request);
     }
 
     /**
@@ -45,13 +33,8 @@ public class RequestHandler {
      * @return True if the transaction commit was successfully processed, false otherwise.
      */
     public boolean handleCommitRequest(CommitRequest request) {
-        this.server_state.i_am_leader_lock.readLock().lock();
-        try {
-            if (this.server_state.i_am_leader) {
-                this.server_state.server_sync.sendReqOrder(request.getRequestId());
-            }
-        } finally {
-            this.server_state.i_am_leader_lock.readLock().unlock();
+        if (this.server_state.i_am_leader.get()) {
+            this.server_state.proposer.propose(request.getRequestId());
         }
 
         this.request_queue.addRequest(request);
@@ -62,18 +45,10 @@ public class RequestHandler {
 
     /**
      * Tell the handler the order by which the requests should be processed.
-     * @param ordedRequest The sequenced request.
+     * @param requestId The request id
      */
-    public void addOrderedRequest(OrdedRequest ordedRequest) {
-        this.ordered_request_processor.addReqOrder(ordedRequest);
-    }
-
-    /**
-     * Tell the handler the order by which the requests should be processed.
-     * @param orderedRequests The list of sequenced requests.
-     */
-    public void addOrderedRequestList(List<OrdedRequest> orderedRequests) {
-        this.ordered_request_processor.addReqOrderList(orderedRequests);
+    public void addReqToQueue(int requestId) {
+        this.ordered_request_processor.addReqOrder(requestId);
     }
 
     public List<AbsRequest> getPendingRequests() {
@@ -85,15 +60,14 @@ public class RequestHandler {
      * It's intended to remove the necessity to have ServerSync in ServerState.
      * This method is called when the server becomes the leader.
      */
-    public void orderAllPendingRequests() {
+    public void startOrderRequests() {
         List<AbsRequest> pendingRequests = this.getPendingRequests();
-        this.server_state.server_sync.setStopSync(false);
         for (AbsRequest request : pendingRequests) {
-            this.server_state.server_sync.sendReqOrder(request.getRequestId());
+            this.server_state.proposer.propose(request.getRequestId());
         }
     }
 
     public void stopOrderRequests() {
-        this.server_state.server_sync.setStopSync(true);
+
     }
 }
