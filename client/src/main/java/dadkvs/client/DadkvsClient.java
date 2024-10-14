@@ -266,6 +266,7 @@ public class DadkvsClient {
     public void goInteractive() {
 
 		System.out.println("Client Start. For the full command list, write \"help\"");
+		System.out.println("Proudly powered by Mestre Andre");
 
 		Scanner scanner = new Scanner(System.in);
         String command;
