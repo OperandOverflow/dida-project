@@ -168,6 +168,8 @@ public class MestreAndre {
                             "Mestre André maintains the resilience of this program. " + LINE_SEPARATOR +
                             "![Salaam Aleikum] Mestre André [Wa alaikum assalam]!" + LINE_SEPARATOR;
 
+    private String wise_words = "Smart people praise simplicity, dumb people praise complexity. - Mestre André";
+
     public String praiseMestreAndre() {
         return mestreAndre;
     }
@@ -175,4 +177,6 @@ public class MestreAndre {
     public String getBlessingsFromMestreAndre() {
         return blessings;
     }
+
+    public String getWiseWordsFromMestreAndre() { return wise_words; }
 }
