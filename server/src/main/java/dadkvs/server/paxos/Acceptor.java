@@ -11,14 +11,14 @@ public class Acceptor {
 
     private final int MAJORITY;
 
-    private final SimplePaxosRPC rpc;
+    private final PaxosRPC rpc;
 
     private final Hashtable<Integer, AcceptorData> acceptorRecord;
 
     public Acceptor(ServerState serverState) {
         this.serverState = serverState;
         this.MAJORITY = serverState.n_servers / 2 + 1;
-        this.rpc = new SimplePaxosRPC(serverState);
+        this.rpc = new PaxosRPC(serverState);
         this.acceptorRecord = new Hashtable<>();
     }
 
@@ -106,7 +106,8 @@ public class Acceptor {
         // Reply with a affirmative accept
         acceptedMsg.accepted = true;
         // Send learn message to all learners
-        //rpc.invokeLearn(consensusIndex, roundNumber, value);
+        // TODO: add config number
+        rpc.invokeLearn(consensusIndex, roundNumber, 0, value);
         return acceptedMsg;
     }
 
