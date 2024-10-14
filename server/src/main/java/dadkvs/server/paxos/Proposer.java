@@ -51,6 +51,7 @@ public class Proposer {
             // Count the number of affirmative promises
             List<PromiseMsg> promises = prepare_resp.stream()
                                                     .filter(promise -> promise.accepted)
+                                                    .filter(promise -> promise.consensusNumber == this.consensusNumber)
                                                     .toList();
             // If the number of promises is smaller than the majority
             if (promises.size() < MAJORITY) {
