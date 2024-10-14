@@ -9,20 +9,14 @@ public class Acceptor {
 
     private final ServerState serverState;
 
-    private final int MAJORITY;
-
-    private final PaxosRPC rpc;
-
     private final Hashtable<Integer, AcceptorData> acceptorRecord;
 
     public Acceptor(ServerState serverState) {
         this.serverState = serverState;
-        this.MAJORITY = serverState.n_servers / 2 + 1;
-        this.rpc = new PaxosRPC(serverState);
         this.acceptorRecord = new Hashtable<>();
     }
 
-    public synchronized PromiseMsg promise(PrepareMsg prepareMsg) {
+    public synchronized PromiseMsg prepare(PrepareMsg prepareMsg) {
         int consensusIndex = prepareMsg.consensusNumber;
         int roundNumber = prepareMsg.roundNumber;
         int config = prepareMsg.configNumber;
@@ -107,7 +101,7 @@ public class Acceptor {
         acceptedMsg.accepted = true;
         // Send learn message to all learners
         // TODO: add config number
-        rpc.invokeLearn(consensusIndex, roundNumber, 0, value);
+        serverState.paxos_rpc.invokeLearn(consensusIndex, roundNumber, 0, value);
         return acceptedMsg;
     }
 

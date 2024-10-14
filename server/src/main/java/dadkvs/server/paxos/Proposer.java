@@ -14,8 +14,6 @@ public class Proposer {
 
     private final int MAJORITY;
 
-    private final PaxosRPC rpc;
-
     private final Hashtable<Integer, ProposerData> proposerRecord;
 
     private int consensusNumber = 0;
@@ -23,7 +21,6 @@ public class Proposer {
     public Proposer(ServerState serverState) {
         this.serverState = serverState;
         this.MAJORITY = serverState.n_servers / 2 + 1;
-        this.rpc = new PaxosRPC(serverState);
         this.proposerRecord = new Hashtable<>();
     }
 
@@ -46,10 +43,10 @@ public class Proposer {
 
             // Send the Prepare message to all acceptors
             // TODO: add config number
-            List<PromiseMsg> prepare_resp = rpc.invokePrepare(
-                                                this.consensusNumber,
-                                                proposerData.roundNumber,
-                                                0);
+            List<PromiseMsg> prepare_resp = serverState.paxos_rpc.invokePrepare(
+                                                                    this.consensusNumber,
+                                                                    proposerData.roundNumber,
+                                                                    0);
 
             // Count the number of affirmative promises
             List<PromiseMsg> promises = prepare_resp.stream()
@@ -78,11 +75,11 @@ public class Proposer {
             }
 
             // Send the Accept message to all acceptors
-            List<AcceptedMsg> accept_resp = rpc.invokeAccept(
-                                                    this.consensusNumber,
-                                                    proposerData.roundNumber,
-                                                    0,
-                                                    proposerData.proposedValue);
+            List<AcceptedMsg> accept_resp = serverState.paxos_rpc.invokeAccept(
+                                                                    this.consensusNumber,
+                                                                    proposerData.roundNumber,
+                                                                    0,
+                                                                    proposerData.proposedValue);
 
             // Count the number of affirmative accepts
             List<AcceptedMsg> accepts = accept_resp.stream()

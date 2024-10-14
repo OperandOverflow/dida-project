@@ -12,14 +12,11 @@ public class Learner {
 
     private final int MAJORITY;
 
-    private final PaxosRPC rpc;
-
     private final HashMap<Integer, LearnerData> learnerRecord;
 
     public Learner(ServerState serverState) {
         this.serverState = serverState;
         this.MAJORITY = serverState.n_servers / 2 + 1;
-        this.rpc = new PaxosRPC(serverState);
         this.learnerRecord = new HashMap<>();
     }
 

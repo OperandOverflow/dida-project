@@ -1,12 +1,15 @@
-package dadkvs.server.paxos;
+package dadkvs.server.rpc;
 
 import dadkvs.DadkvsPaxos;
+import dadkvs.DadkvsPaxosServiceGrpc;
 import dadkvs.server.ServerState;
 import dadkvs.server.paxos.messages.AcceptedMsg;
 import dadkvs.server.paxos.messages.LearnedMsg;
 import dadkvs.server.paxos.messages.PromiseMsg;
 import dadkvs.util.CollectorStreamObserver;
 import dadkvs.util.GenericResponseCollector;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.util.ArrayList;
@@ -19,8 +22,19 @@ public class PaxosRPC {
 
     private final ServerState server_state;
 
+    public DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_stubs;
+
     public PaxosRPC(ServerState state) {
         this.server_state = state;
+
+        ManagedChannel[] channels = new ManagedChannel[server_state.n_servers];
+        this.paxos_stubs = new DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[server_state.n_servers];
+
+        for(int i = 0; i < server_state.n_servers; i++) {
+            int port = this.server_state.base_port + i;
+            channels[i] = ManagedChannelBuilder.forAddress(server_state.ip_address, port).usePlaintext().build();
+            this.paxos_stubs[i] = DadkvsPaxosServiceGrpc.newStub(channels[i]);
+        }
     }
 
     public List<PromiseMsg> invokePrepare(int consensusNumber, int roundNumber, int config) {
@@ -33,7 +47,7 @@ public class PaxosRPC {
         GenericResponseCollector<DadkvsPaxos.PhaseOneReply> responseCollector = new GenericResponseCollector<>(phaseOneReplies, server_state.n_servers);
         for (int i = 0; i < server_state.n_servers; i++) {
             StreamObserver<DadkvsPaxos.PhaseOneReply> phaseOneObserver = new CollectorStreamObserver<>(responseCollector);
-            server_state.rpc_stubs.paxos_stubs[i].phaseone(phaseOneRequest, phaseOneObserver);
+            this.paxos_stubs[i].phaseone(phaseOneRequest, phaseOneObserver);
         }
         responseCollector.waitForTarget(server_state.n_servers);
         List<PromiseMsg> promises = new ArrayList<>();
@@ -60,7 +74,7 @@ public class PaxosRPC {
         GenericResponseCollector<DadkvsPaxos.PhaseTwoReply> responseCollector = new GenericResponseCollector<>(phaseTwoReplies, server_state.n_servers);
         for (int i = 0; i < server_state.n_servers; i++) {
             StreamObserver<DadkvsPaxos.PhaseTwoReply> phaseTwoObserver = new CollectorStreamObserver<>(responseCollector);
-            server_state.rpc_stubs.paxos_stubs[i].phasetwo(phaseTwoRequest, phaseTwoObserver);
+            this.paxos_stubs[i].phasetwo(phaseTwoRequest, phaseTwoObserver);
         }
         responseCollector.waitForTarget(server_state.n_servers);
         List<AcceptedMsg> accepted = new ArrayList<>();
@@ -86,7 +100,7 @@ public class PaxosRPC {
         GenericResponseCollector<DadkvsPaxos.LearnReply> responseCollector = new GenericResponseCollector<>(learnReplies, server_state.n_servers);
         for (int i = 0; i < server_state.n_servers; i++) {
             StreamObserver<DadkvsPaxos.LearnReply> learnObserver = new CollectorStreamObserver<>(responseCollector);
-            server_state.rpc_stubs.paxos_stubs[i].learn(learnRequest, learnObserver);
+            this.paxos_stubs[i].learn(learnRequest, learnObserver);
         }
         responseCollector.waitForTarget(server_state.n_servers);
         List<LearnedMsg> learned = new ArrayList<>();
