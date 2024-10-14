@@ -5,11 +5,9 @@ import dadkvs.server.ServerState;
 import dadkvs.server.paxos.messages.AcceptedMsg;
 import dadkvs.server.paxos.messages.LearnedMsg;
 import dadkvs.server.paxos.messages.PromiseMsg;
-import dadkvs.server.requests.OrdedRequest;
 import dadkvs.util.CollectorStreamObserver;
 import dadkvs.util.GenericResponseCollector;
 import io.grpc.stub.StreamObserver;
-import dadkvs.server.paxos.PaxosValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,18 +15,18 @@ import java.util.List;
 /**
  * This class is dedicated to invoke gRPC methods for Paxos
  */
-public class SimplePaxosRPC {
+public class PaxosRPC {
 
     private final ServerState server_state;
 
-    public SimplePaxosRPC(ServerState state) {
+    public PaxosRPC(ServerState state) {
         this.server_state = state;
     }
 
-    public List<PromiseMsg> invokePrepare(int transactionNumber,int roundNumber, int leaderId, int config) {
+    public List<PromiseMsg> invokePrepare(int consensusNumber, int roundNumber, int config) {
         DadkvsPaxos.PhaseOneRequest phaseOneRequest = DadkvsPaxos.PhaseOneRequest.newBuilder()
                                                                 .setPhase1Config(config)
-                                                                .setPhase1Index(leaderId)
+                                                                .setPhase1Index(consensusNumber)
                                                                 .setPhase1Timestamp(roundNumber)
                                                                 .build();
         ArrayList<DadkvsPaxos.PhaseOneReply> phaseOneReplies = new ArrayList<>();
@@ -40,21 +38,23 @@ public class SimplePaxosRPC {
         responseCollector.waitForTarget(server_state.n_servers);
         List<PromiseMsg> promises = new ArrayList<>();
         for (DadkvsPaxos.PhaseOneReply reply : phaseOneReplies) {
-            PromiseMsg promise = convertToPromiseMsg(reply);
+            PromiseMsg promise = new PromiseMsg(
+                                reply.getPhase1Timestamp(),
+                                reply.getPhase1Index(),
+                                reply.getPhase1Config(),
+                                reply.getPhase1Accepted(),
+                                reply.getPhase1Value());
             promises.add(promise);
         }
         return promises;
     }
 
-    public List<AcceptedMsg> invokeAccept(int transactionNumber, int roundNumber, int leaderId, int config, PaxosValue value) {
+    public List<AcceptedMsg> invokeAccept(int consensusNumber, int roundNumber, int config, int value) {
         DadkvsPaxos.PhaseTwoRequest phaseTwoRequest = DadkvsPaxos.PhaseTwoRequest.newBuilder()
                                                                 .setPhase2Config(config)
-                                                                .setPhase2Index(leaderId) //paxos round
-                                                                .setPhase2Timestamp(roundNumber) //leader
-                                                                .setPhase2Value(DadkvsPaxos.PaxosValue.newBuilder()
-                                                                        .setRequestid(value.getValue().getRequestId())
-                                                                        .setRequestseq(value.getValue().getRequestSeq())
-                                                                        .build())
+                                                                .setPhase2Index(consensusNumber)
+                                                                .setPhase2Timestamp(roundNumber)
+                                                                .setPhase2Value(value)
                                                                 .build();
         ArrayList<DadkvsPaxos.PhaseTwoReply> phaseTwoReplies = new ArrayList<>();
         GenericResponseCollector<DadkvsPaxos.PhaseTwoReply> responseCollector = new GenericResponseCollector<>(phaseTwoReplies, server_state.n_servers);
@@ -65,20 +65,21 @@ public class SimplePaxosRPC {
         responseCollector.waitForTarget(server_state.n_servers);
         List<AcceptedMsg> accepted = new ArrayList<>();
         for (DadkvsPaxos.PhaseTwoReply reply : phaseTwoReplies) {
-            AcceptedMsg accept = convertToAcceptedMsg(reply);
+            AcceptedMsg accept = new AcceptedMsg(
+                                reply.getPhase2Index(),
+                                reply.getPhase2Config(),
+                                reply.getPhase2Accepted());
             accepted.add(accept);
         }
         return accepted;
     }
 
-    public List<LearnedMsg> invokeLearn(int consensusIndex, int roundNumber, PaxosValue value) {
+    public List<LearnedMsg> invokeLearn(int consensusNumber, int roundNumber, int config, int value) {
         DadkvsPaxos.LearnRequest learnRequest = DadkvsPaxos.LearnRequest.newBuilder()
-                                                .setLearntimestamp(consensusIndex)//consensus index aka leaderId % 5
-                                                .setLearnindex(roundNumber) //leader
-                                                .setLearnvalue(DadkvsPaxos.PaxosValue.newBuilder()
-                                                        .setRequestid(value.getValue().getRequestId())
-                                                        .setRequestseq(value.getValue().getRequestSeq())
-                                                        .build())
+                                                .setLearnconfig(config)
+                                                .setLearntimestamp(roundNumber)
+                                                .setLearnindex(consensusNumber)
+                                                .setLearnvalue(value)
                                                 .build();
 
         ArrayList<DadkvsPaxos.LearnReply> learnReplies = new ArrayList<>();
@@ -90,29 +91,12 @@ public class SimplePaxosRPC {
         responseCollector.waitForTarget(server_state.n_servers);
         List<LearnedMsg> learned = new ArrayList<>();
         for (DadkvsPaxos.LearnReply reply : learnReplies) {
-            LearnedMsg learn = new LearnedMsg(reply.getLearnindex(), reply.getLearnconfig(), reply.getLearnaccepted());
+            LearnedMsg learn = new LearnedMsg(
+                                    reply.getLearnindex(),
+                                    reply.getLearnconfig(),
+                                    reply.getLearnaccepted());
             learned.add(learn);
         }
         return learned;
-    }
-
-    private AcceptedMsg convertToAcceptedMsg(DadkvsPaxos.PhaseTwoReply reply) {
-        return new AcceptedMsg(reply.getPhase2Index(), reply.getPhase2Config(), reply.getPhase2Accepted());
-    }
-
-    private PromiseMsg convertToPromiseMsg(DadkvsPaxos.PhaseOneReply reply) {
-        int reqSeq = reply.getPhase1Value().getRequestseq();
-        int reqId = reply.getPhase1Value().getRequestid();
-
-        if (reqId <= -1 || reqSeq <= -1) {
-            return new PromiseMsg(reply.getPhase1Index(), reply.getPhase1Timestamp(),
-                    reply.getPhase1Config(), reply.getPhase1Accepted(), null);
-        } else {
-            OrdedRequest request = new OrdedRequest(reply.getPhase1Value().getRequestseq(),
-                                        reply.getPhase1Value().getRequestid());
-            PaxosValue value = new PaxosValue(request);
-            return new PromiseMsg(reply.getPhase1Index(), reply.getPhase1Timestamp(),
-                    reply.getPhase1Config(), reply.getPhase1Accepted(), value);
-        }
     }
 }
