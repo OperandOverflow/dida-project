@@ -86,6 +86,7 @@ public class Proposer {
             // Count the number of affirmative accepts
             List<AcceptedMsg> accepts = accept_resp.stream()
                     .filter(accepted -> accepted.accepted)
+                    .filter(accepted -> accepted.consensusNumber == this.consensusNumber)
                     .toList();
             // If the number of accepts is smaller than the majority
             if (accepts.size() < MAJORITY) {
