@@ -16,7 +16,7 @@ public class Proposer {
 
     private final Hashtable<Integer, ProposerData> proposerRecord;
 
-    private int consensusNumber = 0;
+    //private int consensusNumber = 0;
 
     public Proposer(ServerState serverState) {
         this.serverState = serverState;
@@ -26,79 +26,87 @@ public class Proposer {
 
     //propose function
     public synchronized void propose(int client_value){
-        // Increment the consensus number
-        this.consensusNumber++;
+        boolean valueCommited = false;
+        // Creating new consensus while the client value is not committed
+        while (!valueCommited && serverState.i_am_leader.get()) {
 
-        // Create a new structure to hold the data
-        ProposerData proposerData = new ProposerData();
-        proposerData.roundNumber = this.serverState.my_id;
-        proposerData.proposedValue = client_value;
-        this.proposerRecord.put(this.consensusNumber, proposerData);
+            // Increment the consensus number
+            //this.consensusNumber++;
+            int consensusNumber = this.serverState.consensusNumber.incrementAndGet();
 
-        boolean finished = false;
-        // Begin loop while not accepted and while I am the leader
-        while (!finished && serverState.i_am_leader.get()) {
-            // Increment the round number
-            proposerData.roundNumber += this.serverState.n_servers;
+            // Create a new structure to hold the data
+            ProposerData proposerData = new ProposerData();
+            proposerData.roundNumber = this.serverState.my_id;
+            proposerData.proposedValue = client_value;
+            this.proposerRecord.put(consensusNumber, proposerData);
 
-            // Send the Prepare message to all acceptors
-            // TODO: add config number
-            List<PromiseMsg> prepare_resp = serverState.paxos_rpc.invokePrepare(
-                                                                    this.consensusNumber,
-                                                                    proposerData.roundNumber,
-                                                                    0);
+            boolean finished = false;
+            // Begin loop while not accepted and while I am the leader
+            while (!finished && serverState.i_am_leader.get()) {
+                // Increment the round number
+                proposerData.roundNumber += this.serverState.n_servers;
 
-            // Count the number of affirmative promises
-            List<PromiseMsg> promises = prepare_resp.stream()
-                                                    .filter(promise -> promise.accepted)
-                                                    .filter(promise -> promise.consensusNumber == this.consensusNumber)
-                                                    .toList();
-            // If the number of promises is smaller than the majority
-            if (promises.size() < MAJORITY) {
-                System.out.println("[Prop] Not enough promises: Received " + promises.size() + " promises, expected " + MAJORITY);
-                // Retry with higher round number
-                continue;
+                // Send the Prepare message to all acceptors
+                // TODO: add config number
+                List<PromiseMsg> prepare_resp = serverState.paxos_rpc.invokePrepare(
+                                                                        consensusNumber,
+                                                                        proposerData.roundNumber,
+                                                                        0);
+
+                // Count the number of affirmative promises
+                List<PromiseMsg> promises = prepare_resp.stream()
+                                                        .filter(promise -> promise.accepted)
+                                                        .filter(promise -> promise.consensusNumber == consensusNumber)
+                                                        .toList();
+                // If the number of promises is smaller than the majority
+                if (promises.size() < MAJORITY) {
+                    System.out.println("[Prop] Not enough promises: Received " + promises.size() + " promises, expected " + MAJORITY);
+                    // Retry with higher round number
+                    continue;
+                }
+
+                // If the number of promises is equal or greater than the majority
+                // Find the accepted value with the highest round number among the promises
+                int mostRecentValue = promises.stream()
+                                              .max(Comparator.comparingInt(p -> p.prevAcceptedRoundNumber))
+                                              .map(promise -> promise.prevAcceptedValue)
+                                              .orElse(-1);
+
+                // If there is an accepted value with a higher round number
+                if (mostRecentValue != -1) {
+                    // Propose the most recent value
+                    proposerData.proposedValue = mostRecentValue;
+                } else {
+                    // Propose the client value
+                    proposerData.proposedValue = client_value;
+                }
+
+                // Send the Accept message to all acceptors
+                List<AcceptedMsg> accept_resp = serverState.paxos_rpc.invokeAccept(
+                                                                        consensusNumber,
+                                                                        proposerData.roundNumber,
+                                                                        0,
+                                                                        proposerData.proposedValue);
+
+                // Count the number of affirmative accepts
+                List<AcceptedMsg> accepts = accept_resp.stream()
+                        .filter(accepted -> accepted.accepted)
+                        .filter(accepted -> accepted.consensusNumber == consensusNumber)
+                        .toList();
+                // If the number of accepts is smaller than the majority
+                if (accepts.size() < MAJORITY) {
+                    System.out.println("[Prop] Not enough accepts: Received " + accepts.size() + " accepts, expected " + MAJORITY);
+                    // Retry with higher round number
+                    continue;
+                }
+
+                // If the number of accepts is equal or greater than the majority
+                // The value is accepted
+                finished = true;
+                valueCommited = proposerData.proposedValue == client_value;
             }
-
-            // If the number of promises is equal or greater than the majority
-            // Find the accepted value with the highest round number among the promises
-            int mostRecentValue = promises.stream()
-                                          .max(Comparator.comparingInt(p -> p.prevAcceptedRoundNumber))
-                                          .map(promise -> promise.prevAcceptedValue)
-                                          .orElse(-1);
-
-            // If there is an accepted value with a higher round number
-            if (mostRecentValue != -1) {
-                // Propose the most recent value
-                proposerData.proposedValue = mostRecentValue;
-            } else {
-                // Propose the client value
-                proposerData.proposedValue = client_value;
-            }
-
-            // Send the Accept message to all acceptors
-            List<AcceptedMsg> accept_resp = serverState.paxos_rpc.invokeAccept(
-                                                                    this.consensusNumber,
-                                                                    proposerData.roundNumber,
-                                                                    0,
-                                                                    proposerData.proposedValue);
-
-            // Count the number of affirmative accepts
-            List<AcceptedMsg> accepts = accept_resp.stream()
-                    .filter(accepted -> accepted.accepted)
-                    .filter(accepted -> accepted.consensusNumber == this.consensusNumber)
-                    .toList();
-            // If the number of accepts is smaller than the majority
-            if (accepts.size() < MAJORITY) {
-                System.out.println("[Prop] Not enough accepts: Received " + accepts.size() + " accepts, expected " + MAJORITY);
-                // Retry with higher round number
-                continue;
-            }
-
-            // If the number of accepts is equal or greater than the majority
-            // The value is accepted
-            finished = true;
         }
+
     }
 
     private static class ProposerData {

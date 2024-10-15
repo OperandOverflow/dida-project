@@ -4,6 +4,7 @@ import dadkvs.server.paxos.*;
 import dadkvs.server.rpc.PaxosRPC;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ServerState {
     public AtomicBoolean   i_am_leader;
@@ -21,6 +22,7 @@ public class ServerState {
     public ConsoleConfig   consoleConfig;
 
     public PaxosRPC        paxos_rpc;
+    public AtomicInteger   consensusNumber;
     public Proposer        proposer;
     public Acceptor        acceptor;
     public Learner         learner;
@@ -43,6 +45,7 @@ public class ServerState {
         consoleConfig = new ConsoleConfig(this);
 
         paxos_rpc = new PaxosRPC(this);
+        consensusNumber = new AtomicInteger(0);
         proposer = new Proposer(this);
         acceptor = new Acceptor(this);
         learner = new Learner(this);

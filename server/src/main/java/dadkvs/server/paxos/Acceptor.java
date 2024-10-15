@@ -21,6 +21,10 @@ public class Acceptor {
         int roundNumber = prepareMsg.roundNumber;
         int config = prepareMsg.configNumber;
 
+        if (serverState.consensusNumber.get() < consensusIndex) {
+            serverState.consensusNumber.set(consensusIndex);
+        }
+
         PromiseMsg promiseMsg = new PromiseMsg();
         promiseMsg.consensusNumber = consensusIndex;
         promiseMsg.configNumber = config;
@@ -70,6 +74,10 @@ public class Acceptor {
         int roundNumber = acceptMsg.roundNumber;
         int config = acceptMsg.configNumber;
         int value = acceptMsg.proposedValue;
+
+        if (serverState.consensusNumber.get() < consensusIndex) {
+            serverState.consensusNumber.set(consensusIndex);
+        }
 
         AcceptedMsg acceptedMsg = new AcceptedMsg();
         acceptedMsg.consensusNumber = consensusIndex;
