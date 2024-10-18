@@ -12,11 +12,11 @@
       - When a replica receives a request, and it's not the leader, it stores the request in a queue.
       - When the replica becomes the leader, i.e. when `setLeader` method is invoked, it checks the queue and starts serializing the request.
 - [ ] Implement debug modes
-    - [ ] Debug mode 1: Crash
-    - [ ] Debug mode 2: Freeze
-    - [ ] Debug mode 3: Unfreeze
-    - [ ] Debug mode 4: Random slow
-    - [ ] Debug mode 5: Cancel slow
+    - [X] Debug mode 1: Crash
+    - [X] Debug mode 2: Freeze
+    - [X] Debug mode 3: Unfreeze
+    - [X] Debug mode 4: Random slow
+    - [X] Debug mode 5: Cancel slow
 - [ ] Implement the Vertical Paxos for step 3
     - [ ] Create a new maven package for the Master in Vertical Paxos
         - Vertical Paxos Master jobs:
