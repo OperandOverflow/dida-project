@@ -11,13 +11,13 @@
       - Use lock to protect the `i_am_leader` variable, so any function needs to acquire the lock before reading/writing.
       - When a replica receives a request, and it's not the leader, it stores the request in a queue.
       - When the replica becomes the leader, i.e. when `setLeader` method is invoked, it checks the queue and starts serializing the request.
-- [ ] ### Implement debug modes
+- [ ] Implement debug modes
     - [ ] Debug mode 1: Crash
     - [ ] Debug mode 2: Freeze
     - [ ] Debug mode 3: Unfreeze
     - [ ] Debug mode 4: Random slow
     - [ ] Debug mode 5: Cancel slow
-- [ ] ### Implement the Vertical Paxos for step 3
+- [ ] Implement the Vertical Paxos for step 3
     - [ ] Create a new maven package for the Master in Vertical Paxos
         - Vertical Paxos Master jobs:
             - Keep track of the ballot number
