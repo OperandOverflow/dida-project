@@ -5,7 +5,9 @@ public class ConsoleConfig {
 
     private final ServerState server_state;
     private final Object freezeObject = new Object();
-    Thread frozenThread;
+    private Thread frozenThread;
+    private Thread slowThread;
+    private boolean isSlow;
 
     public ConsoleConfig(ServerState state) {
         this.server_state = state;
@@ -41,7 +43,13 @@ public class ConsoleConfig {
                 break;
             case 3:
                 unfreezeThread();
-
+                break;
+            case 4:
+                randomSlow();
+                break;
+            case 5:
+                Unslow();
+                break;
         }
     }
 
@@ -91,4 +99,28 @@ public class ConsoleConfig {
                 }
             }
         }
+
+    private void randomSlow() {
+        isSlow = true;
+        if(this.server_state.i_am_leader.get()){
+            slowThread = new Thread(() -> {
+                try{
+                    for(int i = 0; i < 10; i++){
+                        if(isSlow){
+                            Thread.sleep(1000); //to wait this amount of time
+                        }
+                    }
+                }catch(InterruptedException e){
+                    System.out.println("Thread was interrupted slow mode");
+                }
+            });
+        }
     }
+
+    private void Unslow() {
+        if(this.server_state.i_am_leader.get()){
+            isSlow = false;
+            System.out.println("Thread is unslowed");
+        }
+    }
+}

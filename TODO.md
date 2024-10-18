@@ -15,8 +15,8 @@
     - [X] Debug mode 1: Crash
     - [X] Debug mode 2: Freeze
     - [X] Debug mode 3: Unfreeze
-    - [ ] Debug mode 4: Random slow
-    - [ ] Debug mode 5: Cancel slow
+    - [X] Debug mode 4: Random slow
+    - [X] Debug mode 5: Cancel slow
 - [ ] Implement the Vertical Paxos for step 3
     - [ ] Create a new maven package for the Master in Vertical Paxos
         - Vertical Paxos Master jobs:
