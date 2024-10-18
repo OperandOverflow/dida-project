@@ -8,14 +8,32 @@
 - [X] When a certain replica has a pending request, and it was selected to be the leader, it should
   immediately start serializing the request and run Paxos
     - Possible solution:
-        - Use lock to protect the `i_am_leader` variable, so any function needs to acquire the lock before reading/writing.
-        - When a replica receives a request, and it's not the leader, it stores the request in a queue.
-        - When the replica becomes the leader, i.e. when `setLeader` method is invoked, it checks the queue and starts serializing the request.
-- [ ] Implement debug modes
+      - Use lock to protect the `i_am_leader` variable, so any function needs to acquire the lock before reading/writing.
+      - When a replica receives a request, and it's not the leader, it stores the request in a queue.
+      - When the replica becomes the leader, i.e. when `setLeader` method is invoked, it checks the queue and starts serializing the request.
+- [ ] ### Implement debug modes
     - [ ] Debug mode 1: Crash
     - [ ] Debug mode 2: Freeze
     - [ ] Debug mode 3: Unfreeze
     - [ ] Debug mode 4: Random slow
     - [ ] Debug mode 5: Cancel slow
-- [ ] Implement the configuration change for the step 3
-- [ ] Implement the Stoppable Paxos or Vertical Paxos for the step 3
+- [ ] ### Implement the Vertical Paxos for step 3
+    - [ ] Create a new maven package for the Master in Vertical Paxos
+        - Vertical Paxos Master jobs:
+            - Keep track of the ballot number
+            - When receives a reconfig request from the Console:
+                - Increment the ballot number
+                - Send a `newballot` request to all replicas
+    - [ ] Add new message types and RPC functions in `DadkvsPaxos.proto`:
+      ```protobuf
+          message NewBallotRequest {
+              int32 ballotnumber = 1;
+              int32 prevconfig   = 2;
+              int32 newconfig    = 3;
+          }
+          message NewBallotResponse {
+              bool ack           = 2;
+          }
+          rpc newballot(NewBallotRequest) returns (NewBallotResponse) {}
+      ```
+    - [ ] Redirect console's configuration request to the Vertical Paxos Master
