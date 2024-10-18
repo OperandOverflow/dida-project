@@ -28,6 +28,24 @@ public class ConsoleConfig {
     }
 
     public void setDebug(int mode) {
-        //TODO: Implement this method
+        switch(mode){
+            case 1: //Debug Mode 1 Crash
+                Thread crashThread = new Thread(() -> {
+                    try {
+                        // Simulate doing some work.
+                        System.out.println("Thread is running... about to crash.");
+                        Thread.sleep(2000); // Simulate some process is going on
+
+                        // Throwing an exception
+                        throw new RuntimeException("Simulated thread crash for debugging purposes.");
+                    } catch (InterruptedException e) {
+                        // Handle interrupted thread.
+                        System.err.println("Thread interrupted.");
+                    }
+                });
+                crashThread.start();
+                break;
+
+        }
     }
 }
