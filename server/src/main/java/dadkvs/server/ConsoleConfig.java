@@ -7,8 +7,8 @@ public class ConsoleConfig {
 
     private final ServerState server_state;
     private final Object freezeObject = new Object();
-    private Thread frozenThread;
-    private Thread slowThread;
+    //private Thread frozenThread;
+    //private Thread slowThread;
     private boolean isSlow;
 
     public ConsoleConfig(ServerState state) {
@@ -75,9 +75,9 @@ public class ConsoleConfig {
         }
     }
 
-    private void freezeThread() {}
+    public void freezeThread() {}
 
-    private void unfreezeThread() {
+    public void unfreezeThread() {
             synchronized (this.server_state.freezeLock) {
                 this.server_state.freezeLock.notify();
                 System.out.println("Thread is unfrozen");
@@ -86,16 +86,19 @@ public class ConsoleConfig {
         }
 
     public void randomSlow() {
+        isSlow = true;
         Random rnd = new Random();
         int mimiting = rnd.nextInt();
         try{
-            Thread.sleep(mimiting);
+            if(isSlow) {
+                Thread.sleep(mimiting);
+            }
         }catch(InterruptedException e){
             System.out.println("System is in Debug Mode - Slow");
         }
     }
 
-    private void Unslow() {
+    public void Unslow() {
         if(this.server_state.i_am_leader.get()){
             isSlow = false;
             System.out.println("Thread is unslowed");

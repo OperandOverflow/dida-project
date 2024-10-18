@@ -26,16 +26,9 @@ public class RequestHandler {
      */
     public VersionedValue handleReadRequest(ReadRequest request) {
         if(this.server_state.debug_mode.get() == 2 ){
-            synchronized (this.server_state.freezeLock){
-                try{
-                    this.server_state.freezeLock.wait();
-                }catch(InterruptedException e){
-                    System.out.println("System is in Debug Mode - Freeze");
-                }
-            }
+            this.server_state.consoleConfig.freezeThread();
         }else if(this.server_state.debug_mode.get() == 3){
             this.server_state.consoleConfig.randomSlow();
-
         }
         return this.ordered_request_processor.read(request);
     }
