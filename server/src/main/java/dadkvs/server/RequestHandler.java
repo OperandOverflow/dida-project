@@ -3,6 +3,7 @@ package dadkvs.server;
 import dadkvs.server.requests.*;
 
 import java.util.List;
+import java.util.Random;
 
 public class RequestHandler {
 
@@ -24,6 +25,18 @@ public class RequestHandler {
      * @return The value associated with the key or null if the key is not found.
      */
     public VersionedValue handleReadRequest(ReadRequest request) {
+        if(this.server_state.debug_mode.get() == 2 ){
+            synchronized (this.server_state.freezeLock){
+                try{
+                    this.server_state.freezeLock.wait();
+                }catch(InterruptedException e){
+                    System.out.println("System is in Debug Mode - Freeze");
+                }
+            }
+        }else if(this.server_state.debug_mode.get() == 3){
+            this.server_state.consoleConfig.randomSlow();
+
+        }
         return this.ordered_request_processor.read(request);
     }
 

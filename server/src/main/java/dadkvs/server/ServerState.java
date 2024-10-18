@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ServerState {
     public AtomicBoolean   i_am_leader;
-    public int             debug_mode;
+    public AtomicInteger   debug_mode;
     public int             base_port;
     public int             my_id;
     public int             store_size;
@@ -27,12 +27,16 @@ public class ServerState {
     public Acceptor        acceptor;
     public Learner         learner;
 
+    //debugging variables
+    public final Object freezeLock = new Object();
+
+
     
     public ServerState(int kv_size, int port, int myself) {
         base_port = port;
         my_id = myself;
         i_am_leader = new AtomicBoolean(false);
-        debug_mode = 0;
+        debug_mode = new AtomicInteger(0);
         store_size = kv_size;
         n_servers = 5;
         ip_address = "localhost";
