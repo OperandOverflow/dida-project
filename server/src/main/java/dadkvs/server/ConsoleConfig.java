@@ -15,6 +15,7 @@ public class ConsoleConfig {
      * Set the leader status of the server, if the server becomes the
      * leader, and it has pending requests, it will send the requests
      * to other servers.
+     *
      * @param isLeader The leader status of the server.
      */
     public void setLeader(boolean isLeader) {
@@ -30,7 +31,8 @@ public class ConsoleConfig {
     }
 
     public void setDebug(int mode) {
-        switch(mode){
+        this.server_state.debug_mode = mode;
+        switch (mode) {
             case 1: //Debug Mode 1 Crash
                 crashThread();
                 break;
@@ -43,46 +45,50 @@ public class ConsoleConfig {
         }
     }
 
-    private void crashThread(){
-        Thread crashThread = new Thread(() -> {
-            try {
-                // Simulate doing some work.
-                System.out.println("Thread is going to crash oh nooo");
-                Thread.sleep(2000); // Simulate some process is going on
-
-                // Throwing an exception
-                throw new RuntimeException("Runtime exception for debug mode - crash");
-            } catch (InterruptedException e) {
-                // Handle interrupted thread.
-                System.err.println("Thread interrupted.");
-            }
-        });
-        crashThread.start();
-    }
-
-    private void freezeThread(){
-        frozenThread = new Thread(() -> {
-            synchronized (this.freezeObject) {
+    private void crashThread() {
+        if (this.server_state.i_am_leader.get()) {
+            Thread crashThread = new Thread(() -> {
                 try {
-                    System.out.println("Thread is about to freeze oh nooo");
-                    // Wait indefinitely
-                    this.freezeObject.wait();
+                    // Simulate doing some work.
+                    System.out.println("Thread is going to crash oh nooo");
+                    Thread.sleep(2000); // Simulate some process is going on
+
+                    // Throwing an exception
+                    throw new RuntimeException("Runtime exception for debug mode - crash");
                 } catch (InterruptedException e) {
-                    System.err.println("Thread was interrupted debug mode - freeze");
+                    // Handle interrupted thread.
+                    System.err.println("Thread interrupted.");
                 }
-            }
-        });
-        frozenThread.start();
+            });
+            crashThread.start();
+        }
     }
 
-    private void unfreezeThread(){
-        synchronized (this.freezeObject) {
-            if(frozenThread != null){
-                frozenThread.notify();
-                System.out.println("Thread is unfrozen");
-            }else{
-                System.out.println("No Thread to be unfrozen");
+    private void freezeThread() {
+        if (this.server_state.i_am_leader.get()) {
+            frozenThread = new Thread(() -> {
+                synchronized (this.freezeObject) {
+                    try {
+                        System.out.println("Thread is about to freeze oh nooo");
+                        // Wait indefinitely
+                        this.freezeObject.wait();
+                    } catch (InterruptedException e) {
+                        System.err.println("Thread was interrupted debug mode - freeze");
+                    }
+                }
+            });
+            frozenThread.start();
+        }
+    }
+
+    private void unfreezeThread() {
+            synchronized (this.freezeObject) {
+                if (frozenThread != null) {
+                    frozenThread.notify();
+                    System.out.println("Thread is unfrozen");
+                } else {
+                    System.out.println("No Thread to be unfrozen");
+                }
             }
         }
     }
-}
