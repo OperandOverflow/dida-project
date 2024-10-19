@@ -6,10 +6,6 @@ import java.util.Random;
 public class ConsoleConfig {
 
     private final ServerState server_state;
-    private final Object freezeObject = new Object();
-    //private Thread frozenThread;
-    //private Thread slowThread;
-    private boolean isSlow;
 
     public ConsoleConfig(ServerState state) {
         this.server_state = state;
@@ -99,22 +95,17 @@ public class ConsoleConfig {
     }
 
     public void randomSlow() {
-        isSlow = true;
         Random rnd = new Random();
         int mimiting = rnd.nextInt(0, 10);
         try{
-            if(isSlow) {
-                Thread.sleep(mimiting* 1000L);
-            }
-        }catch(InterruptedException e){
+            Thread.sleep(mimiting* 1000L);
+        } catch (InterruptedException e) {
             System.out.println("System is in Debug Mode - Slow");
         }
     }
 
     public void unSlow() {
-        if(this.server_state.i_am_leader.get()){
-            isSlow = false;
-            System.out.println("Thread is unslowed");
-        }
+        this.server_state.debug_mode.set(0);
+        System.out.println("Thread is unslowed");
     }
 }
