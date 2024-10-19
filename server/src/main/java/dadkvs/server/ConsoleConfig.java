@@ -36,8 +36,13 @@ public class ConsoleConfig {
 
     public void setDebug(int mode) {
         this.server_state.debug_mode.set(mode);
-        switch (mode) {
-            case 1: //Debug Mode 1 Crash
+        if (mode == 1)
+            crashThread();
+    }
+
+    public void goDebug() {
+        switch (this.server_state.debug_mode.get()) {
+            case 1:
                 crashThread();
                 break;
             case 2:
@@ -50,40 +55,48 @@ public class ConsoleConfig {
                 randomSlow();
                 break;
             case 5:
-                Unslow();
+                unSlow();
+                break;
+            default:
                 break;
         }
     }
 
     private void crashThread() {
-        if (this.server_state.i_am_leader.get()) {
-            Thread crashThread = new Thread(() -> {
-                try {
-                    // Simulate doing some work.
-                    System.out.println("Thread is going to crash oh nooo");
-                    Thread.sleep(2000); // Simulate some process is going on
+        try {
+            // Simulate doing some work.
+            System.out.println("Thread is going to crash oh nooo");
+            System.out.println("Our threads are broken, but out hearts not!");
+            System.out.println("Unsere Fäden brechen, aber unsere Herzen nicht!");
+            Thread.sleep(1000); // Simulate some process is going on
 
-                    // Throwing an exception
-                    //throw new RuntimeException("Runtime exception for debug mode - crash");
-                    System.exit(-1);
-                } catch (InterruptedException e) {
-                    // Handle interrupted thread.
-                    System.err.println("Thread interrupted.");
-                }
-            });
-            crashThread.start();
+            // Throwing an exception
+            //throw new RuntimeException("Runtime exception for debug mode - crash");
+            System.exit(-1);
+        } catch (InterruptedException e) {
+            // Handle interrupted thread.
+            System.err.println("Thread interrupted.");
         }
     }
 
-    public void freezeThread() {}
+    public void freezeThread() {
+        synchronized (this.server_state.freezeLock) {
+            try {
+                System.out.println("Thread is frozen");
+                this.server_state.freezeLock.wait();
+            } catch (InterruptedException e) {
+                System.err.println("Thread interrupted.");
+            }
+        }
+    }
 
     public void unfreezeThread() {
-            synchronized (this.server_state.freezeLock) {
-                this.server_state.freezeLock.notify();
-                System.out.println("Thread is unfrozen");
-            }
-            this.server_state.debug_mode.set(0);
+        synchronized (this.server_state.freezeLock) {
+            this.server_state.freezeLock.notify();
+            System.out.println("Thread is unfrozen");
         }
+        this.server_state.debug_mode.set(0);
+    }
 
     public void randomSlow() {
         isSlow = true;
@@ -98,7 +111,7 @@ public class ConsoleConfig {
         }
     }
 
-    public void Unslow() {
+    public void unSlow() {
         if(this.server_state.i_am_leader.get()){
             isSlow = false;
             System.out.println("Thread is unslowed");

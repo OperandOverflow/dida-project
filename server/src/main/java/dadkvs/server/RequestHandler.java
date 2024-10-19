@@ -25,11 +25,7 @@ public class RequestHandler {
      * @return The value associated with the key or null if the key is not found.
      */
     public VersionedValue handleReadRequest(ReadRequest request) {
-        if(this.server_state.debug_mode.get() == 2 ){
-            this.server_state.consoleConfig.freezeThread();
-        }else if(this.server_state.debug_mode.get() == 3){
-            this.server_state.consoleConfig.randomSlow();
-        }
+        this.server_state.consoleConfig.goDebug();
         return this.ordered_request_processor.read(request);
     }
 
@@ -39,6 +35,7 @@ public class RequestHandler {
      * @return True if the transaction commit was successfully processed, false otherwise.
      */
     public boolean handleCommitRequest(CommitRequest request) {
+        this.server_state.consoleConfig.goDebug();
         if (this.server_state.i_am_leader.get()) {
             this.server_state.proposer.propose(request.getRequestId());
         }
