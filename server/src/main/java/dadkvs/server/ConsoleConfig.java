@@ -101,10 +101,10 @@ public class ConsoleConfig {
     public void randomSlow() {
         isSlow = true;
         Random rnd = new Random();
-        int mimiting = rnd.nextInt();
+        int mimiting = rnd.nextInt(0, 10);
         try{
             if(isSlow) {
-                Thread.sleep(mimiting);
+                Thread.sleep(mimiting* 1000L);
             }
         }catch(InterruptedException e){
             System.out.println("System is in Debug Mode - Slow");
