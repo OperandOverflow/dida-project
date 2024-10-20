@@ -16,7 +16,7 @@ public class VerticalPaxosMaster {
         this.nextBallotNumber = largestCompleteBallotNumber + 1;
     }
 
-    public void ReceiveReconfigReq(){
+    public void ReceiveReconfigReq(int config){
 
     }
 
@@ -32,9 +32,9 @@ public class VerticalPaxosMaster {
         //TODO: invoke rpc for sending newBallot
     }
 
-    public void CompleteAndActivate(){
+    public boolean CompleteAndActivate(int ballotNum){
         //TODO: Receive complete messages
-
+        return false;
         //TODO: Activate complete messages
     }
 }

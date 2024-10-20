@@ -99,4 +99,13 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
         
     }
 
+    @Override
+    public void newBallot(DadkvsPaxos.NewBallotRequest request, StreamObserver<DadkvsPaxos.NewBallotReply> responseObserver) {
+        // for debug purposes
+        System.out.println("Receive new ballot request: " + request);
+
+        // TODO: Implement this method
+
+    }
+
 }
