@@ -1,0 +1,28 @@
+//
+// Protocol buffers definition for Dadkvs Main Service
+//
+syntax = "proto3";
+package dadkvs;
+
+message NewBallotRequest{
+  int32 newBallot = 1;
+  int32 newConfig = 2;
+  int32 oldConfig = 3;
+}
+
+message NewBallotReply{
+  bool ack = 1;
+}
+
+message Complete {
+  int32 ballot = 1;
+}
+
+message Activated {
+  bool activated = 1;
+}
+
+service DadkvsMasterService {
+  rpc newBallot(NewBallotRequest) returns (NewBallotReply);
+  rpc complete(Complete) returns (Activated);
+}
