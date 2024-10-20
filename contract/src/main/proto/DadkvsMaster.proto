@@ -4,25 +4,23 @@
 syntax = "proto3";
 package dadkvs;
 
-message NewBallotRequest{
-  int32 newBallot = 1;
-  int32 newConfig = 2;
-  int32 oldConfig = 3;
+message ReconfigRequest {
+  int32 confignum = 1;
 }
 
-message NewBallotReply{
+message ReconfigReply {
   bool ack = 1;
 }
 
 message Complete {
-  int32 ballot = 1;
+  int32 ballotnum = 1;
 }
 
 message Activated {
-  bool activated = 1;
+  bool activated  = 1;
 }
 
 service DadkvsMasterService {
-  rpc newBallot(NewBallotRequest) returns (NewBallotReply);
+  rpc reconfig(ReconfigRequest) returns (ReconfigReply);
   rpc complete(Complete) returns (Activated);
 }
