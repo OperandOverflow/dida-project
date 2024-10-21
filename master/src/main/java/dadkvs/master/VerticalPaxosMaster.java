@@ -20,7 +20,6 @@ public class VerticalPaxosMaster {
     private int prevConfig;
     private int currentConfig;
 
-    private final LinkedHashSet<Integer> activeLeaders;
     private int currentLeader;
 
     public VerticalPaxosMaster() {
@@ -33,32 +32,25 @@ public class VerticalPaxosMaster {
         this.prevConfig = 0;
         this.currentConfig = 0;
 
-        // TODO: ask teacher about whether it's necessary to save the list of active leaders
-        this.activeLeaders = new LinkedHashSet<>();
         this.currentLeader = -1;
     }
 
     public boolean setLeader(boolean isLeader, int leaderId){
         if (isLeader) {
-            activeLeaders.add(leaderId);
             currentLeader = leaderId;
         } else {
-            activeLeaders.remove(leaderId);
-            currentLeader = activeLeaders.getLast() != null ? activeLeaders.getLast() : -1;
+            return false;
         }
 
-        boolean serverReply = rpc.invokeSetLeader(isLeader, leaderId);
+        boolean serverReply = rpc.invokeSetLeader(true, leaderId);
         if (!serverReply)
             return false;
 
-        if (!isLeader)
-            return true;
-
-        rpc.invokeNewBallot(nextBallotNumber, currentConfig, currentConfig, leaderId);
+        boolean result = rpc.invokeNewBallot(nextBallotNumber, currentConfig, currentConfig, leaderId);
         pendingBallotNumber = nextBallotNumber;
         nextBallotNumber++;
 
-        return true;
+        return result;
     }
 
     public void reconfig(int config){
