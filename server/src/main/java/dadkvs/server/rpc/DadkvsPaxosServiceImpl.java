@@ -104,8 +104,18 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
         // for debug purposes
         System.out.println("Receive new ballot request: " + request);
 
-        // TODO: Implement this method
+        int ballotNumber = request.getBallotnum();
+        int newConfig = request.getNewconfig();
+        int prevConfig = request.getOldconfig();
 
+        server_state.proposer.newBallot(ballotNumber, newConfig, prevConfig);
+
+        DadkvsPaxos.NewBallotReply reply = DadkvsPaxos.NewBallotReply.newBuilder()
+                                                .setAck(true)
+                                                .build();
+
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
     }
 
 }
