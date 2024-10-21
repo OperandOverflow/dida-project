@@ -108,10 +108,10 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
         int newConfig = request.getNewconfig();
         int prevConfig = request.getOldconfig();
 
-        server_state.proposer.newBallot(ballotNumber, newConfig, prevConfig);
+        boolean result = server_state.proposer.newBallot(ballotNumber, newConfig, prevConfig);
 
         DadkvsPaxos.NewBallotReply reply = DadkvsPaxos.NewBallotReply.newBuilder()
-                                                .setAck(true)
+                                                .setAck(result)
                                                 .build();
 
         responseObserver.onNext(reply);

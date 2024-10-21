@@ -51,11 +51,13 @@ public class PaxosRPC {
                                                                 .build();
         ArrayList<DadkvsPaxos.PhaseOneReply> phaseOneReplies = new ArrayList<>();
         GenericResponseCollector<DadkvsPaxos.PhaseOneReply> responseCollector = new GenericResponseCollector<>(phaseOneReplies, server_state.n_servers);
-        for (int i = 0; i < server_state.n_servers; i++) {
+
+        int[] servers = server_state.configurations[config];
+        for (int serverId : servers) {
             StreamObserver<DadkvsPaxos.PhaseOneReply> phaseOneObserver = new CollectorStreamObserver<>(responseCollector);
-            this.paxos_stubs[i].phaseone(phaseOneRequest, phaseOneObserver);
+            this.paxos_stubs[serverId].phaseone(phaseOneRequest, phaseOneObserver);
         }
-        responseCollector.waitForTarget(server_state.n_servers);
+        responseCollector.waitForTarget(server_state.configurations[config].length);
         List<PromiseMsg> promises = new ArrayList<>();
         for (DadkvsPaxos.PhaseOneReply reply : phaseOneReplies) {
             PromiseMsg promise = new PromiseMsg(
@@ -78,9 +80,11 @@ public class PaxosRPC {
                                                                 .build();
         ArrayList<DadkvsPaxos.PhaseTwoReply> phaseTwoReplies = new ArrayList<>();
         GenericResponseCollector<DadkvsPaxos.PhaseTwoReply> responseCollector = new GenericResponseCollector<>(phaseTwoReplies, server_state.n_servers);
-        for (int i = 0; i < server_state.n_servers; i++) {
+
+        int[] servers = server_state.configurations[config];
+        for (int server : servers) {
             StreamObserver<DadkvsPaxos.PhaseTwoReply> phaseTwoObserver = new CollectorStreamObserver<>(responseCollector);
-            this.paxos_stubs[i].phasetwo(phaseTwoRequest, phaseTwoObserver);
+            this.paxos_stubs[server].phasetwo(phaseTwoRequest, phaseTwoObserver);
         }
         responseCollector.waitForTarget(server_state.n_servers);
         List<AcceptedMsg> accepted = new ArrayList<>();
