@@ -11,22 +11,24 @@ import java.util.ArrayList;
 
 public class MasterRPC {
 
-    private DadkvsMasterServiceGrpc.DadkvsMasterServiceStub[] master_stubs;
-    private DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_stubs;
-    private DadkvsConsoleServiceGrpc.DadkvsConsoleServiceStub[] console_stub;
+    private final DadkvsMasterServiceGrpc.DadkvsMasterServiceStub[] master_stubs;
+    private final DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_stubs;
+    private final DadkvsConsoleServiceGrpc.DadkvsConsoleServiceStub[] console_stubs;
 
     private final int n_servers = 5;
 
     public MasterRPC() {
         ManagedChannel[] channels = new ManagedChannel[n_servers];
         this.master_stubs = new DadkvsMasterServiceGrpc.DadkvsMasterServiceStub[n_servers];
+        this.paxos_stubs = new DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[n_servers];
+        this.console_stubs = new DadkvsConsoleServiceGrpc.DadkvsConsoleServiceStub[n_servers];
 
         for(int i = 0; i < n_servers; i++) {
             int port = 8080 + i;
             channels[i] = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build();
             this.master_stubs[i] = DadkvsMasterServiceGrpc.newStub(channels[i]);
             this.paxos_stubs[i] = DadkvsPaxosServiceGrpc.newStub(channels[i]);
-            this.console_stub[i] = DadkvsConsoleServiceGrpc.newStub(channels[i]);
+            this.console_stubs[i] = DadkvsConsoleServiceGrpc.newStub(channels[i]);
         }
     }
 
@@ -74,7 +76,7 @@ public class MasterRPC {
         GenericResponseCollector<DadkvsConsole.SetLeaderReply> responseCollector = new GenericResponseCollector<>(sl_replies, 1);
 
         StreamObserver<DadkvsConsole.SetLeaderReply> slObserver = new CollectorStreamObserver<>(responseCollector);
-        this.console_stub[leaderId].setleader(sl_request, slObserver);
+        this.console_stubs[leaderId].setleader(sl_request, slObserver);
 
         responseCollector.waitForTarget(1);
 
