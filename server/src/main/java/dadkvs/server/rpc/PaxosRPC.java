@@ -1,5 +1,7 @@
 package dadkvs.server.rpc;
 
+import dadkvs.DadkvsMaster;
+import dadkvs.DadkvsMasterServiceGrpc;
 import dadkvs.DadkvsPaxos;
 import dadkvs.DadkvsPaxosServiceGrpc;
 import dadkvs.server.ServerState;
@@ -22,7 +24,8 @@ public class PaxosRPC {
 
     private final ServerState server_state;
 
-    public DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_stubs;
+    private DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_stubs;
+    private DadkvsMasterServiceGrpc.DadkvsMasterServiceStub master_stub;
 
     public PaxosRPC(ServerState state) {
         this.server_state = state;
@@ -35,6 +38,9 @@ public class PaxosRPC {
             channels[i] = ManagedChannelBuilder.forAddress(server_state.ip_address, port).usePlaintext().build();
             this.paxos_stubs[i] = DadkvsPaxosServiceGrpc.newStub(channels[i]);
         }
+
+        ManagedChannel master_channel = ManagedChannelBuilder.forAddress(server_state.ip_address, server_state.master_port).usePlaintext().build();
+        this.master_stub = DadkvsMasterServiceGrpc.newStub(master_channel);
     }
 
     public List<PromiseMsg> invokePrepare(int consensusNumber, int roundNumber, int config) {
@@ -112,5 +118,21 @@ public class PaxosRPC {
             learned.add(learn);
         }
         return learned;
+    }
+
+    public boolean invokeComplete(int ballotNumber) {
+        DadkvsMaster.Complete request = DadkvsMaster.Complete.newBuilder()
+                                        .setBallotnum(ballotNumber)
+                                        .build();
+
+        ArrayList<DadkvsMaster.Activated> completeReplies = new ArrayList<>();
+        GenericResponseCollector<DadkvsMaster.Activated> responseCollector = new GenericResponseCollector<>(completeReplies, 1);
+        StreamObserver<DadkvsMaster.Activated> completeObserver = new CollectorStreamObserver<>(responseCollector);
+        this.master_stub.complete(request, completeObserver);
+        responseCollector.waitForTarget(1);
+        if (completeReplies.isEmpty())
+            return false;
+
+        return completeReplies.getFirst().getActivated();
     }
 }

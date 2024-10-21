@@ -10,6 +10,7 @@ public class ServerState {
     public AtomicBoolean   i_am_leader;
     public AtomicInteger   debug_mode;
     public int             base_port;
+    public int             master_port;
     public int             my_id;
     public int             store_size;
     public int             n_servers;
@@ -34,6 +35,7 @@ public class ServerState {
     
     public ServerState(int kv_size, int port, int myself) {
         base_port = port;
+        master_port = 8090;
         my_id = myself;
         i_am_leader = new AtomicBoolean(false);
         debug_mode = new AtomicInteger(0);
