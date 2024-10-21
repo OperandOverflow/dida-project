@@ -4,6 +4,15 @@
 syntax = "proto3";
 package dadkvs;
 
+message DefineLeaderRequest {
+  bool isleader = 1;
+  int32 serverid = 2;
+}
+
+message DefineLeaderReply {
+  bool isleaderack = 1;
+}
+
 message ReconfigRequest {
   int32 confignum = 1;
 }
@@ -21,6 +30,7 @@ message Activated {
 }
 
 service DadkvsMasterService {
+  rpc setleader(DefineLeaderRequest) returns (DefineLeaderReply);
   rpc reconfig(ReconfigRequest) returns (ReconfigReply);
   rpc complete(Complete) returns (Activated);
 }
