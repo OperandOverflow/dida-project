@@ -31,9 +31,16 @@ public class ConsoleConfig {
     }
 
     public void setDebug(int mode) {
-        this.server_state.debug_mode.set(mode);
         if (mode == 1)
             crashThread();
+        else if (mode == 3) {
+            this.server_state.debug_mode.set(0);
+            unfreezeThread();
+        } else if (mode == 5) {
+            this.server_state.debug_mode.set(0);
+            unSlow();
+        } else
+            this.server_state.debug_mode.set(mode);
     }
 
     public void goDebug() {
@@ -44,14 +51,8 @@ public class ConsoleConfig {
             case 2:
                 freezeThread();
                 break;
-            case 3:
-                unfreezeThread();
-                break;
             case 4:
                 randomSlow();
-                break;
-            case 5:
-                unSlow();
                 break;
             default:
                 break;
@@ -88,10 +89,9 @@ public class ConsoleConfig {
 
     public void unfreezeThread() {
         synchronized (this.server_state.freezeLock) {
-            this.server_state.freezeLock.notify();
+            this.server_state.freezeLock.notifyAll();
             System.out.println("Thread is unfrozen");
         }
-        this.server_state.debug_mode.set(0);
     }
 
     public void randomSlow() {

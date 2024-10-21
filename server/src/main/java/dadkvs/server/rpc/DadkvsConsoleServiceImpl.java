@@ -49,7 +49,7 @@ public class DadkvsConsoleServiceImpl extends DadkvsConsoleServiceGrpc.DadkvsCon
 		this.server_state.main_loop.wakeup();
 
 		// for debug purposes
-		System.out.println("Setting debug mode to = " + this.server_state.debug_mode);
+		System.out.println("Setting debug mode to = " + request.getMode());
 
 		DadkvsConsole.SetDebugReply response =DadkvsConsole.SetDebugReply.newBuilder()
 			.setAck(response_value).build();
