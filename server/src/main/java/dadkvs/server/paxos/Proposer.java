@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Proposer {
 
@@ -16,12 +17,13 @@ public class Proposer {
 
     private final Hashtable<Integer, ProposerData> proposerRecord;
 
-    //private int consensusNumber = 0;
+    private AtomicInteger ballotNumber;
 
     public Proposer(ServerState serverState) {
         this.serverState = serverState;
         this.MAJORITY = serverState.n_servers / 2 + 1;
         this.proposerRecord = new Hashtable<>();
+        this.ballotNumber = new AtomicInteger(0);
     }
 
     //propose function
@@ -107,6 +109,68 @@ public class Proposer {
             }
         }
 
+    }
+
+    public boolean newBallot(int ballotNumber, int newConfig, int prevConfig) {
+        // Stop all incoming operations
+        serverState.consoleConfig.setDebug(2);
+
+        int consensusNumber = serverState.consensusNumber.get();
+
+        // Perform the phase 1 of Paxos on the previous configuration to read the potential accepted value
+        // Send the Prepare message to servers of the previous configuration
+        List<PromiseMsg> prepare_resp = serverState.paxos_rpc.invokePrepare(
+                                                                consensusNumber,
+                                                                ballotNumber,
+                                                                prevConfig);
+
+        List<PromiseMsg> promises = prepare_resp.stream()
+                                                .filter(promise -> promise.accepted)
+                                                .filter(promise -> promise.consensusNumber == consensusNumber)
+                                                .toList();
+
+        if (promises.size() < MAJORITY) {
+            System.out.println("[Prop] Not enough promises: Received " + promises.size() + " promises, expected " + MAJORITY);
+            return false;
+        }
+
+        // Find the accepted value with the highest round number among the promises
+        int mostRecentValue = promises.stream()
+                                      .max(Comparator.comparingInt(p -> p.prevAcceptedRoundNumber))
+                                      .map(promise -> promise.prevAcceptedValue)
+                                      .orElse(-1);
+
+        // If there is an accepted value
+        if (mostRecentValue != -1) {
+            // Propose the most recent value
+            ProposerData proposerData = new ProposerData();
+            proposerData.roundNumber = ballotNumber;
+            proposerData.proposedValue = mostRecentValue;
+            this.proposerRecord.put(consensusNumber, proposerData);
+            List<AcceptedMsg> accept_resp = this.serverState.paxos_rpc.invokeAccept(
+                                                                        consensusNumber,
+                                                                        ballotNumber,
+                                                                        newConfig,
+                                                                        mostRecentValue);
+
+            List<AcceptedMsg> accepts = accept_resp.stream()
+                                                    .filter(accepted -> accepted.accepted)
+                                                    .filter(accepted -> accepted.consensusNumber == consensusNumber)
+                                                    .toList();
+
+            if (accepts.size() < MAJORITY) {
+                System.out.println("[Prop] Not enough accepts: Received " + accepts.size() + " accepts, expected " + MAJORITY);
+                return false;
+            }
+
+        }
+
+        boolean result = serverState.paxos_rpc.invokeComplete(ballotNumber);
+        if (result)
+            this.ballotNumber.set(ballotNumber);
+
+        // Tell the master that the ballot is completed
+        return result;
     }
 
     private static class ProposerData {
