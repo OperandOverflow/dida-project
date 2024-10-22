@@ -17,8 +17,8 @@
     - Description: The leader should not be able to change the ballot number, all consensus should use the ballot number appointed by the Master.
         When the leader can't get enough Promise or Accepted, it should stay blocked and wait for `newBallot` to be invoked.
     - Priority: High
-    - Assignee: None
-    - Status: Open
+    - Assignee: Daniela
+    - Status: Waiting for Feedback
 
 ## **List of tasks to be done**
 - [X] When a certain replica has a pending request, and it was selected to be the leader, it should
