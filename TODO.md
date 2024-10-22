@@ -11,7 +11,7 @@
         should be removed or deactivated from the interface of the console.
     - Priority: Medium
     - Assignee: Daniela
-    - Status: In Progress
+    - Status: Resolved
 
 - ### Ticket 2: Adapt the code of `propose()` function of the Proposer class to Vertical Paxos.
     - Description: The leader should not be able to change the ballot number, all consensus should use the ballot number appointed by the Master.

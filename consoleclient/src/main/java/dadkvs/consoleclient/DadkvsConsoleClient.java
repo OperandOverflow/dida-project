@@ -71,46 +71,9 @@ public class DadkvsConsoleClient {
 
 			case "help":
 				System.out.println("\t========= help =========");
-				System.out.println("\tleader on/off <replica>");
 				System.out.println("\tdebug <mode> <replica>");
 				System.out.println("\treconfig <configuration>");
 				System.out.println("\texit");
-				break;
-
-			case "leader":
-				System.out.println("leader " + parameter1 + " " + parameter2);
-				if (parameter1 == null || parameter2 == null) {
-					System.out.println("usage: leader on/off <replica>");
-					break;
-				}
-
-				if (!parameter1.equals("on") && !parameter1.equals("off")) {
-					System.out.println("usage: leader on/off <replica>");
-					break;
-				}
-
-				isleader = parameter1.equals("on");
-
-				try {
-					replica = Integer.parseInt(parameter2);
-					System.out.println("setting leader " + isleader + " replica " + replica);
-
-					DadkvsConsole.SetLeaderRequest.Builder setleader_request = DadkvsConsole.SetLeaderRequest.newBuilder();
-					ArrayList<DadkvsConsole.SetLeaderReply> setleader_responses = new ArrayList<>();
-					GenericResponseCollector<DadkvsConsole.SetLeaderReply> setleader_collector = new GenericResponseCollector<>(setleader_responses, 1);
-					CollectorStreamObserver<DadkvsConsole.SetLeaderReply> setleader_observer =  new CollectorStreamObserver<>(setleader_collector);
-					setleader_request.setIsleader(isleader);
-					console_async_stubs[replica].setleader(setleader_request.build(), setleader_observer);
-					setleader_collector.waitForTarget(1);
-					if (!setleader_responses.isEmpty()) {
-						Iterator<DadkvsConsole.SetLeaderReply> setleader_iterator = setleader_responses.iterator();
-						DadkvsConsole.SetLeaderReply setleader_reply = setleader_iterator.next();
-						System.out.println("reply = " + setleader_reply.getIsleaderack());
-					} else
-						System.out.println("no reply received");
-				} catch (NumberFormatException e) {
-					System.out.println("usage: leader on/off <replica>");
-				}
 				break;
 
 			case "debug":
