@@ -71,6 +71,7 @@ public class VerticalPaxosMaster {
 
         largestCompleteBallotNumber = pendingBallotNumber;
         pendingBallotNumber = -1;
+        notify();
 
         return true;
     }

@@ -19,15 +19,22 @@ public class Proposer {
 
     private AtomicInteger ballotNumber;
 
+    private int currentConfig;
+
     public Proposer(ServerState serverState) {
         this.serverState = serverState;
         this.MAJORITY = serverState.n_servers / 2 + 1;
         this.proposerRecord = new Hashtable<>();
         this.ballotNumber = new AtomicInteger(0);
+        this.currentConfig = -1; //no config has been set
     }
 
     //propose function
     public synchronized void propose(int client_value){
+        if(this.currentConfig == -1){
+            System.out.println("[Prop] The system has no configuration currently - no value processed");
+            return;
+        }
         boolean valueCommited = false;
         // Creating new consensus while the client value is not committed
         while (!valueCommited && serverState.i_am_leader.get()) {
@@ -46,14 +53,17 @@ public class Proposer {
             // Begin loop while not accepted and while I am the leader
             while (!finished && serverState.i_am_leader.get()) {
                 // Increment the round number
-                proposerData.roundNumber += this.serverState.n_servers;
+                //*THE ROUND NUMBER IS OUR BALLOT NUMBER RIGHT????* IM SO CONFUSED WITH NAMES HOLY FUCK
+                //cause in the new ballot function we use the invokePrepare with the ballot number but in here
+                //we use the round number sooooo aaarggggh. Well. i did this.
+                proposerData.roundNumber = this.ballotNumber.get();
+                //proposerData.roundNumber += this.serverState.n_servers;
 
                 // Send the Prepare message to all acceptors
-                // TODO: add config number
                 List<PromiseMsg> prepare_resp = serverState.paxos_rpc.invokePrepare(
                                                                         consensusNumber,
                                                                         proposerData.roundNumber,
-                                                                        0);
+                                                                        this.currentConfig);
 
                 // Count the number of affirmative promises
                 List<PromiseMsg> promises = prepare_resp.stream()
@@ -64,6 +74,11 @@ public class Proposer {
                 if (promises.size() < MAJORITY) {
                     System.out.println("[Prop] Not enough promises: Received " + promises.size() + " promises, expected " + MAJORITY);
                     // Retry with higher round number
+                    try{
+                        wait();
+                    }catch(InterruptedException e){
+                        System.out.println("[Prop] Interrupted Exception - waiting for newBallot form Master");
+                    }
                     continue;
                 }
 
@@ -87,7 +102,7 @@ public class Proposer {
                 List<AcceptedMsg> accept_resp = serverState.paxos_rpc.invokeAccept(
                                                                         consensusNumber,
                                                                         proposerData.roundNumber,
-                                                                        0,
+                                                                        this.currentConfig,
                                                                         proposerData.proposedValue);
 
                 // Count the number of affirmative accepts
@@ -98,7 +113,11 @@ public class Proposer {
                 // If the number of accepts is smaller than the majority
                 if (accepts.size() < MAJORITY) {
                     System.out.println("[Prop] Not enough accepts: Received " + accepts.size() + " accepts, expected " + MAJORITY);
-                    // Retry with higher round number
+                    try{
+                        wait();
+                    }catch(InterruptedException e){
+                        System.out.println("[Prop] Interrupted Exception - waiting for newBallot form Master");
+                    }
                     continue;
                 }
 
@@ -169,6 +188,7 @@ public class Proposer {
         if (result)
             this.ballotNumber.set(ballotNumber);
 
+        this.currentConfig = newConfig;
         // Tell the master that the ballot is completed
         return result;
     }
