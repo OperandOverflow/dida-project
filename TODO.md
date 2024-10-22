@@ -4,6 +4,22 @@
 - [X] Duplicated requests when having multiple leaders.
 - [X] With two leaders, when turning off the leader on one replica, the Paxos should continue usually.
 
+## **Tickets**
+- ### Ticket 1: Remove or deactivate the `leader off` functionality from the console.
+    - Description: In Vertical Paxos, there is no need to explicitly turn off a leader, since by activating a new leader with a higher ballot number
+        the previous leader will not be able to propose any new value. Thus, Vertical Paxos does not support this feature. Therefore, the `leader off` functionality
+        should be removed or deactivated from the interface of the console.
+    - Priority: Medium
+    - Assignee: None
+    - Status: Open
+
+- ### Ticket 2: Adapt the code of `propose()` function of the Proposer class to Vertical Paxos.
+    - Description: The leader should not be able to change the ballot number, all consensus should use the ballot number appointed by the Master.
+        When the leader can't get enough Promise or Accepted, it should stay blocked and wait for `newBallot` to be invoked.
+    - Priority: High
+    - Assignee: None
+    - Status: Open
+
 ## **List of tasks to be done**
 - [X] When a certain replica has a pending request, and it was selected to be the leader, it should
   immediately start serializing the request and run Paxos
@@ -39,3 +55,7 @@
           }
       ```
     - [ ] Redirect console's configuration request to the Vertical Paxos Master
+    - [ ] Remove the `leader off` functionality from the console
+    - [ ] In Proposer, if the `propose` function didn't receive
+    - [ ] In Proposer, when newBallot is activated, let the propose to finish or block before proceeding
+
