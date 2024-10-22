@@ -22,6 +22,8 @@ public class ServerState {
     public RequestHandler  request_handler;
     public ConsoleConfig   consoleConfig;
 
+    public final int[][]   configurations;
+
     public PaxosRPC        paxos_rpc;
     public AtomicInteger   consensusNumber;
     public Proposer        proposer;
@@ -49,6 +51,10 @@ public class ServerState {
 
         request_handler = new RequestHandler(this);
         consoleConfig = new ConsoleConfig(this);
+
+        configurations = new int[][] {{0,1,2},
+                                      {1,2,3},
+                                      {2,3,4}};
 
         paxos_rpc = new PaxosRPC(this);
         consensusNumber = new AtomicInteger(0);
