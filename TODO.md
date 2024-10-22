@@ -10,8 +10,8 @@
         the previous leader will not be able to propose any new value. Thus, Vertical Paxos does not support this feature. Therefore, the `leader off` functionality
         should be removed or deactivated from the interface of the console.
     - Priority: Medium
-    - Assignee: None
-    - Status: Open
+    - Assignee: Daniela
+    - Status: In Progress
 
 - ### Ticket 2: Adapt the code of `propose()` function of the Proposer class to Vertical Paxos.
     - Description: The leader should not be able to change the ballot number, all consensus should use the ballot number appointed by the Master.
