@@ -11,7 +11,7 @@
         should be removed or deactivated from the interface of the console.
     - Priority: Medium
     - Assignee: Daniela
-    - Status: Waiting 2nd round of feedback
+    - Status: Corrected and closed
     - Feedback: It is only necessary to deactivate the `leader off` functionality from the console, the `leader on` should still be available. 
         Otherwise, there is no way to activate a new leader and the program will not move forward.
     - Correction Done: Altered the code so that it only accepts `leader on` requests, any `leader off` will result in an error message and no operation will be done.
@@ -21,7 +21,7 @@
         When the leader can't get enough Promise or Accepted, it should stay blocked and wait for `newBallot` to be invoked.
     - Priority: High
     - Assignee: Daniela
-    - Status: Waiting 2nd round of feedback
+    - Status: Under review
     - Follow-up description: In normal Paxos, when the leader can't get the majority of Promise or Accepted, it will retry with a higher ballot number.
         However, in Vertical Paxos, the leader should not change the ballot number, since the Master is responsible for telling a leader which ballot number it should
         use for the following consensuses. Therefore, if the leader can't get enough Promise or Accepted, it should stay blocked until the Master invokes `newBallot`
@@ -37,7 +37,7 @@
     - Description: The `leader on` functionality should be invoke the `setleader` function of Vertical Paxos master, so the Master activate the new leader with the `newBallot` message.
     - Priority: Medium
     - Assignee: Daniela
-    - Status: Waiting Feedback
+    - Status: Approved and closed
     - Things done: Created a `master_async_stubs` object to use on the `leader on` function, and converted all the calls to the console setLeader to the Master one
 
 ## **List of tasks to be done**
