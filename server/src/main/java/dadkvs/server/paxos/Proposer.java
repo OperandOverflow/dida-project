@@ -185,9 +185,10 @@ public class Proposer {
         }
 
         boolean result = serverState.paxos_rpc.invokeComplete(ballotNumber);
-        if (result)
+        if (result) {
             this.ballotNumber.set(ballotNumber);
-
+            notify(); //notifying the thread for the process to continue on the propose function
+        }
         this.currentConfig = newConfig;
         // Tell the master that the ballot is completed
         return result;

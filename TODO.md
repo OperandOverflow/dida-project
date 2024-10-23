@@ -11,16 +11,17 @@
         should be removed or deactivated from the interface of the console.
     - Priority: Medium
     - Assignee: Daniela
-    - Status: Correction needed
+    - Status: Waiting 2nd round of feedback
     - Feedback: It is only necessary to deactivate the `leader off` functionality from the console, the `leader on` should still be available. 
         Otherwise, there is no way to activate a new leader and the program will not move forward.
+    - Correction Done: Altered the code so that it only accepts `leader on` requests, any `leader off` will result in an error message and no operation will be done.
 
 - ### Ticket 2: Adapt the code of `propose()` function of the Proposer class to Vertical Paxos.
     - Description: The leader should not be able to change the ballot number, all consensus should use the ballot number appointed by the Master.
         When the leader can't get enough Promise or Accepted, it should stay blocked and wait for `newBallot` to be invoked.
     - Priority: High
     - Assignee: Daniela
-    - Status: Correction needed
+    - Status: Waiting 2nd round of feedback
     - Follow-up description: In normal Paxos, when the leader can't get the majority of Promise or Accepted, it will retry with a higher ballot number.
         However, in Vertical Paxos, the leader should not change the ballot number, since the Master is responsible for telling a leader which ballot number it should
         use for the following consensuses. Therefore, if the leader can't get enough Promise or Accepted, it should stay blocked until the Master invokes `newBallot`
@@ -30,12 +31,14 @@
             from the Proposer, the `notify()` will not work and the proposer will not be waked up. I suggest to implement this mechanism in the class `Proposer` itself.
         - The `roundNumber` is the same as `ballotNumber` in the Proposer class, Lamport calls it `ballot number` in his papers so I adopted this term in Vertical Paxos, but they are the same thing.
         - The addition of local variable `currentConfig` and it's use seems correct.
+    -Correction made: instead of having the `notify()` in the Vertical Paxos class, I put it on the `newBallot` function in the `Proposer` class right after it changes its own ballot variable 
 
 - ### Ticket 3: Change the RPC call of `leader on` to the Master.
     - Description: The `leader on` functionality should be invoke the `setleader` function of Vertical Paxos master, so the Master activate the new leader with the `newBallot` message.
     - Priority: Medium
-    - Assignee: None
-    - Status: Open
+    - Assignee: Daniela
+    - Status: Waiting Feedback
+    - Things done: Created a `master_async_stubs` object to use on the `leader on` function, and converted all the calls to the console setLeader to the Master one
 
 ## **List of tasks to be done**
 - [X] When a certain replica has a pending request, and it was selected to be the leader, it should
