@@ -21,12 +21,13 @@ public class DadkvsConsoleClient {
 
 	static String host;
 	static int port;
+	static int master_port = 8090;
 	static String[] targets;
 
 	static ManagedChannel[] channels;
 	static DadkvsMainServiceGrpc.DadkvsMainServiceStub[] main_async_stubs;
 	static DadkvsConsoleServiceGrpc.DadkvsConsoleServiceStub[] console_async_stubs;
-	static DadkvsMasterServiceGrpc.DadkvsMasterServiceStub[] master_async_stubs;
+	static DadkvsMasterServiceGrpc.DadkvsMasterServiceStub master_async_stub;
 
 	static Scanner scanner;
 
@@ -101,7 +102,7 @@ public class DadkvsConsoleClient {
 					GenericResponseCollector<DadkvsMaster.DefineLeaderReply> setleader_collector = new GenericResponseCollector<>(setleader_responses, 1);
 					CollectorStreamObserver<DadkvsMaster.DefineLeaderReply> setleader_observer =  new CollectorStreamObserver<>(setleader_collector);
 					setleader_request.setIsleader(isleader);
-					master_async_stubs[replica].setleader(setleader_request.build(), setleader_observer);
+					master_async_stub.setleader(setleader_request.build(), setleader_observer);
 					setleader_collector.waitForTarget(1);
 					if (!setleader_responses.isEmpty()) {
 						Iterator<DadkvsMaster.DefineLeaderReply> setleader_iterator = setleader_responses.iterator();
@@ -133,7 +134,7 @@ public class DadkvsConsoleClient {
 					setdebug_request.setMode(mode);
 					console_async_stubs[replica].setdebug(setdebug_request.build(), setdebug_observer);
 					setdebug_collector.waitForTarget(1);
-					if (setdebug_responses.size() >= 1) {
+					if (!setdebug_responses.isEmpty()) {
 						Iterator<DadkvsConsole.SetDebugReply> setdebug_iterator = setdebug_responses.iterator();
 						DadkvsConsole.SetDebugReply setdebug_reply = setdebug_iterator.next();
 						System.out.println("reply = " + setdebug_reply.getAck());
@@ -254,13 +255,14 @@ public class DadkvsConsoleClient {
 
 		main_async_stubs = new DadkvsMainServiceGrpc.DadkvsMainServiceStub[n_servers];
 		console_async_stubs = new DadkvsConsoleServiceGrpc.DadkvsConsoleServiceStub[n_servers];
-		master_async_stubs = new DadkvsMasterServiceGrpc.DadkvsMasterServiceStub[n_servers];
 
 		for (int i = 0; i < n_servers; i++) {
 			main_async_stubs[i] = DadkvsMainServiceGrpc.newStub(channels[i]);
 			console_async_stubs[i] = DadkvsConsoleServiceGrpc.newStub(channels[i]);
-			master_async_stubs[i] = DadkvsMasterServiceGrpc.newStub(channels[i]);
 		}
+
+		ManagedChannel master_channel = ManagedChannelBuilder.forAddress(host, master_port).usePlaintext().build();
+		master_async_stub = DadkvsMasterServiceGrpc.newStub(master_channel);
 
 		scanner = new Scanner(System.in);
 	}
