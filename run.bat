@@ -9,6 +9,10 @@ start "Server 2" cmd /k mvn exec:java -D"exec.args"="8080 2"
 start "Server 3" cmd /k mvn exec:java -D"exec.args"="8080 3"
 start "Server 4" cmd /k mvn exec:java -D"exec.args"="8080 4"
 
+cd /d ".\.."
+cd /d ".\master"\
+
+start "Master" cmd /k mvn exec:java
 
 cd /d ".\.."
 cd /d ".\client"\
