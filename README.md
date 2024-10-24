@@ -1,38 +1,27 @@
 # DAD2425
 Project course for DAD 2024-25
 
-This repository holds the base code required to implement the project. Students are free to improve on the following code.
-
-# Requirements
-
-The project requires the following packages:
-
-- Java 22
-- Maven 3.8.4
-- Protoc 3.12
+## Group 4
+- Daniela Camarinha ist1112265
+- Xiting Wang ist1112191
+- Joana Matias ist1112438
 
 # Compiling
-
-To compile the project, students must run the command
-`mvn clean install` in the root directory
-
-## **WARNING - Compilation Environment**
-
-The project requires different `pom.xml` for the *contract* module depending on the CPU architecture/OS distribution. 
-The project currently has two pre-pepared poms:
-- One for **ARM/M4 Mac-OS** based systems, named `arm-pom.xml`;
-- One for **Intel/Linux** based systems, named `intel-pom.xml`;
-
-Before the first compilation, copy your required contract pom and rename it to `pom.xml`.
+The project must be compiled using `mvn clean install` in the root directory
 
 # Deployment
 
 Current implementation assumes that all modules run on the same physical machine and requires 5 active servers. 
 
-The project is composed of three main components:
+The project is composed of four main components:
 - Servers
 - Clients
 - ConsoleClient
+- Master(Vertical Paxos)
+
+On Windows, to deploy 5 servers, 1 client, 1 console and 1 Master, there is a script that can be executed by doing:
+`./run-bat` in the root directory.
+This is will deploy the servers starting from port 8080, id 0, and on.
 
 
 ## Servers
