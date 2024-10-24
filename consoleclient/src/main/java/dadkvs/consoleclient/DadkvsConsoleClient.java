@@ -159,67 +159,20 @@ public class DadkvsConsoleClient {
 				try {
 					configuration  =  Integer.parseInt(parameter1);
 					System.out.println("reconfiguring to configuration " + configuration);
-					int old_config = 0;
-					int old_config_ts = 0;
 
-					DadkvsMain.ReadRequest.Builder read_request  = DadkvsMain.ReadRequest.newBuilder();
-					ArrayList<DadkvsMain.ReadReply> read_responses = new ArrayList<>();
-					GenericResponseCollector<DadkvsMain.ReadReply> read_collector = new GenericResponseCollector<>(read_responses, n_servers);;
+					DadkvsMaster.ReconfigRequest.Builder reconfig_request = DadkvsMaster.ReconfigRequest.newBuilder();
+					ArrayList<DadkvsMaster.ReconfigReply> reconfig_response = new ArrayList<>();
+					GenericResponseCollector<DadkvsMaster.ReconfigReply> reconfig_collector = new GenericResponseCollector<>(reconfig_response, n_servers);
+					reconfig_request.setConfignum(configuration);
 
-					read_request.setKey(0);
-					for (int i = 0; i < n_servers; i++) {
-						CollectorStreamObserver<DadkvsMain.ReadReply> read_observer = new CollectorStreamObserver<>(read_collector);
-						main_async_stubs[i].read(read_request.build(), read_observer);
-					}
-					read_collector.waitForTarget(responses_needed);
-					if (read_responses.size() >= responses_needed) {
-						Iterator<DadkvsMain.ReadReply> read_iterator = read_responses.iterator();
-						DadkvsMain.ReadReply read_reply = read_iterator.next();
-						System.out.println("read key " + read_request.getKey() + " = <" + read_reply.getValue() + "," + read_reply.getTimestamp() + ">");
-						old_config = read_reply.getValue();
-						old_config_ts = read_reply.getTimestamp();
-					} else {
-						System.out.println("error reading configuration");
-					}
+					CollectorStreamObserver<DadkvsMaster.ReconfigReply> read_observer = new CollectorStreamObserver<>(reconfig_collector);
+					master_async_stub.reconfig(reconfig_request.build(), read_observer);
+					reconfig_collector.waitForTarget(1);
 
-					if (configuration != old_config +1)
-						System.out.println("configuration should be " + (old_config +1));
-					else {
-						sequence_number = sequence_number+1;
-						int reqid = sequence_number*100 + client_id;
-
-						DadkvsMain.CommitRequest.Builder commit_request = DadkvsMain.CommitRequest.newBuilder();
-
-						commit_request.setReqid(reqid).
-							setKey1(0)
-							.setVersion1(old_config_ts)
-							.setKey2(0)
-							.setVersion2(old_config_ts)
-							.setWritekey(0)
-							.setWriteval(configuration);
-
-						System.out.println("Reqid " + reqid);
-
-						ArrayList<DadkvsMain.CommitReply> commit_responses = new ArrayList<>();
-						GenericResponseCollector<DadkvsMain.CommitReply> commit_collector = new GenericResponseCollector<>(commit_responses, n_servers);
-
-						for (int i = 0; i < n_servers; i++) {
-							CollectorStreamObserver<DadkvsMain.CommitReply> commit_observer = new CollectorStreamObserver<>(commit_collector);
-							main_async_stubs[i].committx(commit_request.build(), commit_observer);
-						}
-						commit_collector.waitForTarget(responses_needed);
-						if (commit_responses.size() >= responses_needed) {
-							Iterator<DadkvsMain.CommitReply> commit_iterator = commit_responses.iterator();
-							DadkvsMain.CommitReply commit_reply = commit_iterator.next ();
-							System.out.println("Reqid = " + reqid + " id in reply = " + commit_reply.getReqid());
-							if (commit_reply.getAck()) {
-								System.out.println("Committed key " + commit_request.getWritekey() + " with value " + commit_request.getWriteval());
-							} else {
-								System.out.println("Commit Failed");
-							}
-						} else
-							System.out.println("Panic...error commiting");
-					}
+					if (reconfig_response.getFirst().getAck()) {
+						System.out.println("reconfig acknowledged");
+					} else
+						System.out.println("reconfig not acknowledged");
 				} catch (NumberFormatException e) {
 					System.out.println("usage: reconfig <configuration>");
 				}
