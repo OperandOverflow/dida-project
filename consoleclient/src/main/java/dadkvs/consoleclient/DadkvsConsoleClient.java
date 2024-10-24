@@ -101,11 +101,14 @@ public class DadkvsConsoleClient {
 				try {
 					replica = Integer.parseInt(parameter2);
 					System.out.println("setting leader " + isleader + " replica " + replica);
+
 					DadkvsMaster.DefineLeaderRequest.Builder setleader_request = DadkvsMaster.DefineLeaderRequest.newBuilder();
+					setleader_request.setIsleader(isleader).setServerid(replica);
+
 					ArrayList<DadkvsMaster.DefineLeaderReply> setleader_responses = new ArrayList<>();
 					GenericResponseCollector<DadkvsMaster.DefineLeaderReply> setleader_collector = new GenericResponseCollector<>(setleader_responses, 1);
 					CollectorStreamObserver<DadkvsMaster.DefineLeaderReply> setleader_observer =  new CollectorStreamObserver<>(setleader_collector);
-					setleader_request.setIsleader(isleader);
+
 					master_async_stub.setleader(setleader_request.build(), setleader_observer);
 					setleader_collector.waitForTarget(1);
 					if (!setleader_responses.isEmpty()) {
