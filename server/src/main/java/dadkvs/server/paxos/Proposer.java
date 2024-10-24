@@ -17,35 +17,30 @@ public class Proposer {
 
     private final Hashtable<Integer, ProposerData> proposerRecord;
 
-    private AtomicInteger ballotNumber;
+    private final AtomicInteger ballotNumber;
 
-    private int currentConfig;
+    private final AtomicInteger currentConfig;
 
     public Proposer(ServerState serverState) {
         this.serverState = serverState;
         this.MAJORITY = serverState.n_servers / 2 + 1;
         this.proposerRecord = new Hashtable<>();
         this.ballotNumber = new AtomicInteger(0);
-        this.currentConfig = -1; //no config has been set
+        this.currentConfig = new AtomicInteger(0); //no config has been set
     }
 
     //propose function
     public synchronized void propose(int client_value){
-        if(this.currentConfig == -1){
-            System.out.println("[Prop] The system has no configuration currently - no value processed");
-            return;
-        }
         boolean valueCommited = false;
         // Creating new consensus while the client value is not committed
         while (!valueCommited && serverState.i_am_leader.get()) {
 
             // Increment the consensus number
-            //this.consensusNumber++;
             int consensusNumber = this.serverState.consensusNumber.incrementAndGet();
 
             // Create a new structure to hold the data
             ProposerData proposerData = new ProposerData();
-            proposerData.roundNumber = this.serverState.my_id;
+            proposerData.ballotNumber = this.serverState.my_id;
             proposerData.proposedValue = client_value;
             this.proposerRecord.put(consensusNumber, proposerData);
 
@@ -56,14 +51,14 @@ public class Proposer {
                 //*THE ROUND NUMBER IS OUR BALLOT NUMBER RIGHT????* IM SO CONFUSED WITH NAMES HOLY FUCK
                 //cause in the new ballot function we use the invokePrepare with the ballot number but in here
                 //we use the round number sooooo aaarggggh. Well. i did this.
-                proposerData.roundNumber = this.ballotNumber.get();
+                proposerData.ballotNumber = this.ballotNumber.get();
                 //proposerData.roundNumber += this.serverState.n_servers;
 
                 // Send the Prepare message to all acceptors
                 List<PromiseMsg> prepare_resp = serverState.paxos_rpc.invokePrepare(
                                                                         consensusNumber,
-                                                                        proposerData.roundNumber,
-                                                                        this.currentConfig);
+                                                                        proposerData.ballotNumber,
+                                                                        this.currentConfig.get());
 
                 // Count the number of affirmative promises
                 List<PromiseMsg> promises = prepare_resp.stream()
@@ -101,8 +96,8 @@ public class Proposer {
                 // Send the Accept message to all acceptors
                 List<AcceptedMsg> accept_resp = serverState.paxos_rpc.invokeAccept(
                                                                         consensusNumber,
-                                                                        proposerData.roundNumber,
-                                                                        this.currentConfig,
+                                                                        proposerData.ballotNumber,
+                                                                        this.currentConfig.get(),
                                                                         proposerData.proposedValue);
 
                 // Count the number of affirmative accepts
@@ -113,10 +108,12 @@ public class Proposer {
                 // If the number of accepts is smaller than the majority
                 if (accepts.size() < MAJORITY) {
                     System.out.println("[Prop] Not enough accepts: Received " + accepts.size() + " accepts, expected " + MAJORITY);
-                    try{
-                        wait();
-                    }catch(InterruptedException e){
-                        System.out.println("[Prop] Interrupted Exception - waiting for newBallot form Master");
+                    synchronized (this) {
+                        try {
+                            wait();
+                        } catch (InterruptedException e) {
+                            System.out.println("[Prop] Interrupted Exception - waiting for newBallot form Master");
+                        }
                     }
                     continue;
                 }
@@ -131,6 +128,7 @@ public class Proposer {
     }
 
     public boolean newBallot(int ballotNumber, int newConfig, int prevConfig) {
+        System.out.println("[Prop] Starting new ballot with ballot number " + ballotNumber + " and configuration " + newConfig);
         // Stop all incoming operations
         serverState.consoleConfig.setDebug(2);
 
@@ -142,6 +140,7 @@ public class Proposer {
                                                                 consensusNumber,
                                                                 ballotNumber,
                                                                 prevConfig);
+        System.out.println("[Prop] Received " + prepare_resp.size() + " promises");
 
         List<PromiseMsg> promises = prepare_resp.stream()
                                                 .filter(promise -> promise.accepted)
@@ -150,6 +149,7 @@ public class Proposer {
 
         if (promises.size() < MAJORITY) {
             System.out.println("[Prop] Not enough promises: Received " + promises.size() + " promises, expected " + MAJORITY);
+            serverState.consoleConfig.setDebug(3);
             return false;
         }
 
@@ -161,9 +161,10 @@ public class Proposer {
 
         // If there is an accepted value
         if (mostRecentValue != -1) {
+            System.out.println("[Prop] Found accepted value: " + mostRecentValue);
             // Propose the most recent value
             ProposerData proposerData = new ProposerData();
-            proposerData.roundNumber = ballotNumber;
+            proposerData.ballotNumber = ballotNumber;
             proposerData.proposedValue = mostRecentValue;
             this.proposerRecord.put(consensusNumber, proposerData);
             List<AcceptedMsg> accept_resp = this.serverState.paxos_rpc.invokeAccept(
@@ -179,24 +180,43 @@ public class Proposer {
 
             if (accepts.size() < MAJORITY) {
                 System.out.println("[Prop] Not enough accepts: Received " + accepts.size() + " accepts, expected " + MAJORITY);
+                serverState.consoleConfig.setDebug(3);
                 return false;
             }
 
         }
+        System.out.println("[Prop] Completed ballot");
 
+        // Tell the master that the ballot is completed
         boolean result = serverState.paxos_rpc.invokeComplete(ballotNumber);
-        if (result) {
-            this.ballotNumber.set(ballotNumber);
+        if (!result) {
+            System.out.println("[Prop] Master rejected");
+            serverState.consoleConfig.setDebug(3);
+            return false;
+        }
+
+        System.out.println("[Prop] Master accepted");
+        this.ballotNumber.set(ballotNumber);
+        serverState.i_am_leader.set(true);
+        this.currentConfig.set(newConfig);
+        synchronized (this) {
             notify(); //notifying the thread for the process to continue on the propose function
         }
-        this.currentConfig = newConfig;
-        // Tell the master that the ballot is completed
-        return result;
+
+        Thread thread = new Thread(
+                    () -> serverState.request_handler.startOrderRequests()
+        );
+        thread.start();
+
+        System.out.println("[Prop] New Ballot response: " + result);
+        // Resume all incoming operations
+        serverState.consoleConfig.setDebug(3);
+        return true;
     }
 
     private static class ProposerData {
 
-        public int roundNumber;
+        public int ballotNumber;
 
         public int proposedValue;
 
@@ -206,7 +226,7 @@ public class Proposer {
 
         public ProposerData() {
             this.proposedValue = -1;
-            this.roundNumber = -1;
+            this.ballotNumber = -1;
             this.promises = new ArrayList<>();
             this.accepted = new ArrayList<>();
         }
