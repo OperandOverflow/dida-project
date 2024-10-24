@@ -31,12 +31,14 @@ public class Proposer {
 
     //propose function
     public synchronized void propose(int client_value){
+        System.out.println("[Prop] Proposing value: " + client_value);
         boolean valueCommited = false;
         // Creating new consensus while the client value is not committed
-        while (!valueCommited && serverState.i_am_leader.get()) {
+        while (!valueCommited) {
 
             // Increment the consensus number
             int consensusNumber = this.serverState.consensusNumber.incrementAndGet();
+            System.out.println("[Prop] Consensus number: " + consensusNumber + " - ballot number: " + ballotNumber.get());
 
             // Create a new structure to hold the data
             ProposerData proposerData = new ProposerData();
@@ -46,7 +48,7 @@ public class Proposer {
 
             boolean finished = false;
             // Begin loop while not accepted and while I am the leader
-            while (!finished && serverState.i_am_leader.get()) {
+            while (!finished) {
                 // Increment the round number
                 //*THE ROUND NUMBER IS OUR BALLOT NUMBER RIGHT????* IM SO CONFUSED WITH NAMES HOLY FUCK
                 //cause in the new ballot function we use the invokePrepare with the ballot number but in here
@@ -68,11 +70,12 @@ public class Proposer {
                 // If the number of promises is smaller than the majority
                 if (promises.size() < MAJORITY) {
                     System.out.println("[Prop] Not enough promises: Received " + promises.size() + " promises, expected " + MAJORITY);
-                    // Retry with higher round number
-                    try{
-                        wait();
-                    }catch(InterruptedException e){
-                        System.out.println("[Prop] Interrupted Exception - waiting for newBallot form Master");
+                    synchronized (this) {
+                        try {
+                            wait();
+                        } catch (InterruptedException e) {
+                            System.out.println("[Prop] Interrupted Exception - waiting for newBallot form Master");
+                        }
                     }
                     continue;
                 }
@@ -121,9 +124,11 @@ public class Proposer {
                 // If the number of accepts is equal or greater than the majority
                 // The value is accepted
                 finished = true;
+                System.out.println("[Prop] Value accepted: " + proposerData.proposedValue);
                 valueCommited = proposerData.proposedValue == client_value;
             }
         }
+        System.out.println("[Prop] Client value committed: " + client_value);
 
     }
 
@@ -200,7 +205,7 @@ public class Proposer {
         serverState.i_am_leader.set(true);
         this.currentConfig.set(newConfig);
         synchronized (this) {
-            notify(); //notifying the thread for the process to continue on the propose function
+            notifyAll(); //notifying the thread for the process to continue on the propose function
         }
 
         Thread thread = new Thread(

@@ -20,6 +20,7 @@ public class Acceptor {
         int consensusIndex = prepareMsg.consensusNumber;
         int roundNumber = prepareMsg.roundNumber;
         int config = prepareMsg.configNumber;
+        System.out.println("[Acce] Received prepare for consensus: " + consensusIndex + " ballot: " + roundNumber);
 
         if (serverState.consensusNumber.get() < consensusIndex) {
             serverState.consensusNumber.set(consensusIndex);
@@ -74,6 +75,7 @@ public class Acceptor {
         int roundNumber = acceptMsg.roundNumber;
         int config = acceptMsg.configNumber;
         int value = acceptMsg.proposedValue;
+        System.out.println("[Acce] Received accept for consensus: " + consensusIndex + " ballot: " + roundNumber);
 
         if (serverState.consensusNumber.get() < consensusIndex) {
             serverState.consensusNumber.set(consensusIndex);

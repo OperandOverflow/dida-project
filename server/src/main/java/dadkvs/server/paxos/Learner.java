@@ -25,6 +25,7 @@ public class Learner {
         int roundNumber = learnMsg.roundNumber;
         int config = learnMsg.configNumber;
         int value = learnMsg.learnedValue;
+        System.out.println("[Lear] Received learn for consensus: " + consensusIndex + " ballot: " + roundNumber);
 
         LearnedMsg learnedMsg = new LearnedMsg();
         learnedMsg.consensusNumber = consensusIndex;
@@ -51,6 +52,8 @@ public class Learner {
         if (roundNumber < learnerData.highestReceivedRoundNumber) {
             // Reply with a negative learned
             learnedMsg.accepted = false;
+            System.out.println("[Lear] Current round number lower than the highest seen");
+            System.out.println("       Round number: " + roundNumber + " Seen number: " + learnerData.highestReceivedRoundNumber);
             return learnedMsg;
         }
 
@@ -66,6 +69,7 @@ public class Learner {
         if (counter + 1 >= this.MAJORITY && counter < this.MAJORITY) {
             // Deliver the value to the application
             serverState.request_handler.addReqToQueue(value);
+            System.out.println("[Lear] Delivering value: " + value + " for consensus: " + consensusIndex + " with ballot: " + roundNumber);
         }
         // Reply with a affirmative learned
         learnedMsg.accepted = true;
