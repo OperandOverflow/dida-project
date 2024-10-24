@@ -21,7 +21,7 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
     @Override
     public void phaseone(DadkvsPaxos.PhaseOneRequest request, StreamObserver<DadkvsPaxos.PhaseOneReply> responseObserver) {
 	    // for debug purposes
-	    System.out.println("Receive phase1 request: " + request);
+	    //System.out.println("Receive phase1 request: " + request);
 
         // Extract details from the PhaseOneRequest
         int phase1config = request.getPhase1Config(); //for next steps of the project
@@ -48,7 +48,7 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
     @Override
     public void phasetwo(DadkvsPaxos.PhaseTwoRequest request, StreamObserver<DadkvsPaxos.PhaseTwoReply> responseObserver) {
 	    // for debug purposes
-	    System.out.println ("Receive phase two request: " + request);
+	    //System.out.println ("Receive phase two request: " + request);
 
         //Variables regarding the phaseTwoRequest
         int phase2config = request.getPhase2Config();
@@ -74,7 +74,7 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
     @Override
     public void learn(DadkvsPaxos.LearnRequest request, StreamObserver<DadkvsPaxos.LearnReply> responseObserver) {
         // for debug purposes
-        System.out.println("Receive learn request: " + request);
+        //System.out.println("Receive learn request: " + request);
 
         int learnConfig = request.getLearnconfig();  
         int learnIndex = request.getLearnindex();
@@ -92,7 +92,7 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
                                                 .build();
 
 
-        System.out.println("Learned value for index " + learnIndex + ": " + learnValue);
+        //System.out.println("Learned value for index " + learnIndex + ": " + learnValue);
 
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
@@ -102,7 +102,7 @@ public class DadkvsPaxosServiceImpl extends DadkvsPaxosServiceGrpc.DadkvsPaxosSe
     @Override
     public void newBallot(DadkvsPaxos.NewBallotRequest request, StreamObserver<DadkvsPaxos.NewBallotReply> responseObserver) {
         // for debug purposes
-        System.out.println("Receive new ballot request: " + request);
+        //System.out.println("Receive new ballot request: " + request);
 
         int ballotNumber = request.getBallotnum();
         int newConfig = request.getNewconfig();
