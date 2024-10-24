@@ -61,28 +61,28 @@ public class MasterRPC {
         return nb_replies.getFirst().getAck();
     }
 
-    /**
-     * This method changes the leader status of a server.
-     * @param isLeader True if the server is the new leader, false otherwise
-     * @param leaderId The id of the server to be contacted
-     * @return True if the server acknowledges the request, false otherwise
-     */
-    public boolean invokeSetLeader(boolean isLeader, int leaderId) {
-        DadkvsConsole.SetLeaderRequest sl_request = DadkvsConsole.SetLeaderRequest.newBuilder()
-                                                                                    .setIsleader(isLeader)
-                                                                                    .build();
-
-        ArrayList<DadkvsConsole.SetLeaderReply> sl_replies = new ArrayList<>();
-        GenericResponseCollector<DadkvsConsole.SetLeaderReply> responseCollector = new GenericResponseCollector<>(sl_replies, 1);
-
-        StreamObserver<DadkvsConsole.SetLeaderReply> slObserver = new CollectorStreamObserver<>(responseCollector);
-        this.console_stubs[leaderId].setleader(sl_request, slObserver);
-
-        responseCollector.waitForTarget(1);
-
-        if (sl_replies.isEmpty())
-            return false;
-
-        return sl_replies.getFirst().getIsleaderack();
-    }
+//    /**
+//     * This method changes the leader status of a server.
+//     * @param isLeader True if the server is the new leader, false otherwise
+//     * @param leaderId The id of the server to be contacted
+//     * @return True if the server acknowledges the request, false otherwise
+//     */
+//    public boolean invokeSetLeader(boolean isLeader, int leaderId) {
+//        DadkvsConsole.SetLeaderRequest sl_request = DadkvsConsole.SetLeaderRequest.newBuilder()
+//                                                                                    .setIsleader(isLeader)
+//                                                                                    .build();
+//
+//        ArrayList<DadkvsConsole.SetLeaderReply> sl_replies = new ArrayList<>();
+//        GenericResponseCollector<DadkvsConsole.SetLeaderReply> responseCollector = new GenericResponseCollector<>(sl_replies, 1);
+//
+//        StreamObserver<DadkvsConsole.SetLeaderReply> slObserver = new CollectorStreamObserver<>(responseCollector);
+//        this.console_stubs[leaderId].setleader(sl_request, slObserver);
+//
+//        responseCollector.waitForTarget(1);
+//
+//        if (sl_replies.isEmpty())
+//            return false;
+//
+//        return sl_replies.getFirst().getIsleaderack();
+//    }
 }

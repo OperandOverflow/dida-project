@@ -16,27 +16,27 @@ public class DadkvsConsoleServiceImpl extends DadkvsConsoleServiceGrpc.DadkvsCon
 	this.server_state = state;
     }
 
-    @Override
-    public void setleader(DadkvsConsole.SetLeaderRequest request, StreamObserver<DadkvsConsole.SetLeaderReply> responseObserver) {
-		// for debug purposes
-		//System.out.println(request);
-
-		boolean response_value = true;
-
-		this.server_state.consoleConfig.setLeader(request.getIsleader());
-
-		// for debug purposes
-		System.out.println("I am the leader = " + this.server_state.i_am_leader );
-
-
-		this.server_state.main_loop.wakeup();
-
-		DadkvsConsole.SetLeaderReply response = DadkvsConsole.SetLeaderReply.newBuilder()
-			.setIsleaderack(response_value).build();
-
-		responseObserver.onNext(response);
-       	responseObserver.onCompleted();
-    }
+//    @Override
+//    public void setleader(DadkvsConsole.SetLeaderRequest request, StreamObserver<DadkvsConsole.SetLeaderReply> responseObserver) {
+//		// for debug purposes
+//		//System.out.println(request);
+//
+//		boolean response_value = true;
+//
+//		this.server_state.consoleConfig.setLeader(request.getIsleader());
+//
+//		// for debug purposes
+//		System.out.println("I am the leader = " + this.server_state.i_am_leader );
+//
+//
+//		this.server_state.main_loop.wakeup();
+//
+//		DadkvsConsole.SetLeaderReply response = DadkvsConsole.SetLeaderReply.newBuilder()
+//			.setIsleaderack(response_value).build();
+//
+//		responseObserver.onNext(response);
+//       	responseObserver.onCompleted();
+//    }
 
     @Override
     public void setdebug(DadkvsConsole.SetDebugRequest request, StreamObserver<DadkvsConsole.SetDebugReply> responseObserver) {
