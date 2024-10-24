@@ -25,11 +25,18 @@ public class DadkvsConsoleClient {
 	static String[] targets;
 
 	static ManagedChannel[] channels;
+	static ManagedChannel master_channel;
 	static DadkvsMainServiceGrpc.DadkvsMainServiceStub[] main_async_stubs;
 	static DadkvsConsoleServiceGrpc.DadkvsConsoleServiceStub[] console_async_stubs;
 	static DadkvsMasterServiceGrpc.DadkvsMasterServiceStub master_async_stub;
 
 	static Scanner scanner;
+
+	static final String HELP_MESSAGE = 	"================ Help ================" + LINE_SEPARATOR +
+										" leader on <replica>" + LINE_SEPARATOR +
+										" debug <mode> <replica>" + LINE_SEPARATOR +
+										" reconfig <configuration>" + LINE_SEPARATOR +
+										" exit" + LINE_SEPARATOR;
 
 
     public static void main(String[] args) {
@@ -69,20 +76,17 @@ public class DadkvsConsoleClient {
 			switch (mainCommand) {
 
 			case "help":
-				System.out.println("\t========= help =========");
-				System.out.println("\tdebug <mode> <replica>");
-				System.out.println("\treconfig <configuration>");
-				System.out.println("\texit");
+				System.out.println(HELP_MESSAGE);
 				break;
 
 			case "leader":
-				System.out.println("leader on " + parameter2);
 				if (parameter1 == null || parameter2 == null) {
 					System.out.println("usage: leader on <replica>");
 					break;
 				}
+				System.out.println("leader " + parameter1 + " " + parameter2);
 				if(parameter1.equals("off")){
-					System.out.println("[Console] Can only turn leader on - \n" +
+					System.out.println("[Error] Can only turn leader on - \n" +
 										"'leader off' responsibility is off to the Master");
 					break;
 				}
@@ -261,7 +265,7 @@ public class DadkvsConsoleClient {
 			console_async_stubs[i] = DadkvsConsoleServiceGrpc.newStub(channels[i]);
 		}
 
-		ManagedChannel master_channel = ManagedChannelBuilder.forAddress(host, master_port).usePlaintext().build();
+		master_channel = ManagedChannelBuilder.forAddress(host, master_port).usePlaintext().build();
 		master_async_stub = DadkvsMasterServiceGrpc.newStub(master_channel);
 
 		scanner = new Scanner(System.in);
@@ -272,6 +276,7 @@ public class DadkvsConsoleClient {
 		for (int i = 0; i < n_servers; i++) {
 			channels[i].shutdownNow();
 		}
+		master_channel.shutdownNow();
 		scanner.close();
 	}
 }
