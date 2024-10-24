@@ -94,7 +94,7 @@ public class DadkvsMaster {
         }
 
         try {
-            port = Integer.parseInt(args[0]);
+            port = Integer.parseInt(args[1]);
         } catch (NumberFormatException e) {
             System.err.println("Argument wrong type!");
             port = 8090;
