@@ -86,7 +86,7 @@ public class PaxosRPC {
             StreamObserver<DadkvsPaxos.PhaseTwoReply> phaseTwoObserver = new CollectorStreamObserver<>(responseCollector);
             this.paxos_stubs[server].phasetwo(phaseTwoRequest, phaseTwoObserver);
         }
-        responseCollector.waitForTarget(server_state.n_servers);
+        responseCollector.waitForTarget(server_state.configurations[config].length);
         List<AcceptedMsg> accepted = new ArrayList<>();
         for (DadkvsPaxos.PhaseTwoReply reply : phaseTwoReplies) {
             AcceptedMsg accept = new AcceptedMsg(
