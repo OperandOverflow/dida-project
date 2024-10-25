@@ -38,15 +38,17 @@ public class DadkvsClient {
     ManagedChannel[] channels;
     DadkvsMainServiceGrpc.DadkvsMainServiceStub[] async_stubs;
 
-	private static final String HELP_MESSAGE = 	"=============== HELP ===============\n" +
-												" help\n" +
-												" read <key>\n" +
-												" tx <read_key> <read_key> <write_key>\n" +
-												" loop \n" +
-												" range <key-range>\n" +
-												" length <loop-length>\n" +
-												" time <sleep-range>\n" +
-												" exit\n";
+	private static final String LINE_SEPARATOR = System.lineSeparator();
+
+	private static final String HELP_MESSAGE = 	"================================= HELP =================================" + LINE_SEPARATOR +
+												" help									- show all commands" + LINE_SEPARATOR +
+												" read <key>							- read value of key" + LINE_SEPARATOR +
+												" tx <read_key> <read_key> <write_key>  - make transaction" + LINE_SEPARATOR +
+												" loop 									- repeatedly makes transactions" + LINE_SEPARATOR +
+												" range <key-range>						- set the range of keys for loop" + LINE_SEPARATOR +
+												" length <loop-length>					- set the number of loops" + LINE_SEPARATOR +
+												" time <sleep-range>					- set the time between iterations" + LINE_SEPARATOR +
+												" exit									- mestre Andre terminates program" + LINE_SEPARATOR;
 
     
     public DadkvsClient () {
@@ -142,7 +144,7 @@ public class DadkvsClient {
 		int counter = 0;
 		int committed = 0;
 
-		System.out.println("going to run " + loop_size + " transactions with key range = " + key_range + " sleep delay range = " + sleep_range);
+		System.out.println("\t[Info] Going to run " + loop_size + " transactions with key range = " + key_range + " sleep delay range = " + sleep_range);
 
 		while (counter < loop_size) {
 			int write_key = rnd.nextInt(key_range)+1;
@@ -152,7 +154,7 @@ public class DadkvsClient {
 			int read_key1 = rnd.nextInt(key_range)+1;
 				VersionedValue kv_entry1 = doRead (read_key1);
 			if (kv_entry1 == null) {
-				System.out.println("Panic! ..");
+				System.out.println("\t[Error] Panic! ..");
 				return;
 			}
 			Thread.sleep(rnd.nextInt(sleep_range) * 1000);
@@ -161,19 +163,19 @@ public class DadkvsClient {
 			int read_key2 = rnd.nextInt(key_range)+1;
 				VersionedValue kv_entry2 = doRead (read_key2);
 			if (kv_entry2 == null) {
-				System.out.println("Panic! ..");
+				System.out.println("\t[Error] Panic! ..");
 				return;
 			}
 			Thread.sleep(rnd.nextInt(sleep_range) * 1000);
 
 
-			System.out.println("Commiting transaction number " + (counter+1));
+			System.out.println("\t[Info] Commiting transaction number " + (counter+1));
 			if (doCommit (read_key1, kv_entry1.getVersion(), read_key2, kv_entry2.getVersion(), write_key, write_value))
 				committed++;
 			Thread.sleep(rnd.nextInt(sleep_range) * 1000);
 			counter++;
 		}
-		System.out.println("loop done. transactions committed = " + committed + ". transactions aborted = " + (loop_size-committed) + ".");
+		System.out.println("\t[Info] Loop done. transactions committed = " + committed + ". transactions aborted = " + (loop_size-committed) + ".");
 
     }
     
@@ -348,26 +350,26 @@ public class DadkvsClient {
 						System.out.println("\t[Error] Usage: length <loop-length>");
                     break;
 	        	case "range":
-		    		System.out.println("range " + parameter1);
+		    		System.out.println("\trange " + parameter1);
                     if (parameter1 != null) {
 						try {
 							 key_range =  Integer.parseInt(parameter1);
 						} catch (NumberFormatException e) {
-							System.out.println("usage: range key-range");
-							}
+							System.out.println("\t[Error] Usage: range <key-range>");
+						}
 					} else
-						System.out.println("usage: range key-range");
+						System.out.println("\t[Error] Usage: range <key-range>");
                     break;
 	        	case "time":
-		    		System.out.println("time " + parameter1);
+		    		System.out.println("\ttime " + parameter1);
                     if (parameter1 != null) {
 						try {
 							 sleep_range=  Integer.parseInt(parameter1);
 						} catch (NumberFormatException e) {
-							System.out.println("usage: time sleep-range");
+							System.out.println("\t[Error] Usage: time <sleep-range>");
 						}
 		    		} else
-						System.out.println("usage: time sleep-range");
+						System.out.println("\t[Error] Usage: time <sleep-range>");
                     break;
 				case "loop":
 		     		try {
@@ -381,7 +383,7 @@ public class DadkvsClient {
 	        	case "":
 		    		break;
                 default:
-                    System.out.println("Unknown command: " + mainCommand);
+                    System.out.println("\tUnknown command: " + mainCommand);
                     break;
             }
 		}
