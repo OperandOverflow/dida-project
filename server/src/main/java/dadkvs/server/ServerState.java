@@ -62,4 +62,13 @@ public class ServerState {
         acceptor = new Acceptor(this);
         learner = new Learner(this);
     }
+
+    public void shutdown() {
+        main_loop_worker.interrupt();
+        try {
+            paxos_rpc.shutdown();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

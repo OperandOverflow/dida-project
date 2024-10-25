@@ -44,6 +44,15 @@ public class DadkvsServer {
 		final BindableService console_impl = new DadkvsConsoleServiceImpl(server_state);
 		final BindableService paxos_impl   = new DadkvsPaxosServiceImpl(server_state);
 
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			System.out.println("Shutting down server");
+			server_state.main_loop_worker.interrupt();
+            try {
+                server_state.paxos_rpc.shutdown();
+            } catch (InterruptedException e) {
+            }
+        }));
+
 		// Create a new server to listen on port.
 		Server server = ServerBuilder.forPort(port)
 									 .addService(service_impl)
