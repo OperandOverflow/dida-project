@@ -70,7 +70,12 @@ public class RequestHandler {
         }
     }
 
-    public void stopOrderRequests() {
-
+    /**
+     * This method removes the request from the pending requests queue, avoiding
+     * it from being serialized again.
+     * @param requestId The request id.
+     */
+    public void removePendingRequest(int requestId) {
+        this.request_queue.removeRequest(requestId);
     }
 }

@@ -152,11 +152,11 @@ public class Proposer {
                                                 .filter(promise -> promise.consensusNumber == consensusNumber)
                                                 .toList();
 
-        if (promises.size() < MAJORITY) {
-            System.out.println("[Prop] Not enough promises: Received " + promises.size() + " promises, expected " + MAJORITY);
-            serverState.consoleConfig.setDebug(3);
-            return false;
-        }
+//        if (promises.size() < MAJORITY) {
+//            System.out.println("[Prop] Not enough promises: Received " + promises.size() + " promises, expected " + MAJORITY);
+//            serverState.consoleConfig.setDebug(3);
+//            return false;
+//        }
 
         // Find the accepted value with the highest round number among the promises
         int mostRecentValue = promises.stream()
@@ -189,6 +189,8 @@ public class Proposer {
                 return false;
             }
 
+            // Ensure that the request is removed from the pending requests
+            this.serverState.request_handler.removePendingRequest(mostRecentValue);
         }
         System.out.println("[Prop] Completed ballot");
 

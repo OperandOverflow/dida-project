@@ -25,14 +25,14 @@ public class PaxosRPC {
 
     private final ServerState server_state;
 
-    private ManagedChannel[] channels;
-    private DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_stubs;
-    private DadkvsMasterServiceGrpc.DadkvsMasterServiceStub master_stub;
+    private final ManagedChannel[] channels;
+    private final DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_stubs;
+    private final DadkvsMasterServiceGrpc.DadkvsMasterServiceStub master_stub;
 
     public PaxosRPC(ServerState state) {
         this.server_state = state;
 
-        ManagedChannel[] channels = new ManagedChannel[server_state.n_servers];
+        this.channels = new ManagedChannel[server_state.n_servers];
         this.paxos_stubs = new DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[server_state.n_servers];
 
         for(int i = 0; i < server_state.n_servers; i++) {
@@ -49,11 +49,7 @@ public class PaxosRPC {
         for (int i = 0; i < server_state.n_servers; i++) {
             if (channels[i] == null)
                 continue;
-            channels[i].awaitTermination(5, TimeUnit.SECONDS);
-            if (!channels[i].isTerminated()) {
-                System.out.println("Forcing channel shutdown...");
-                channels[i].shutdownNow();
-            }
+            channels[i].shutdownNow();
         }
     }
 
@@ -64,7 +60,7 @@ public class PaxosRPC {
                                                                 .setPhase1Timestamp(roundNumber)
                                                                 .build();
         ArrayList<DadkvsPaxos.PhaseOneReply> phaseOneReplies = new ArrayList<>();
-        GenericResponseCollector<DadkvsPaxos.PhaseOneReply> responseCollector = new GenericResponseCollector<>(phaseOneReplies, server_state.n_servers);
+        GenericResponseCollector<DadkvsPaxos.PhaseOneReply> responseCollector = new GenericResponseCollector<>(phaseOneReplies, server_state.configurations[config].length);
 
         int[] servers = server_state.configurations[config];
         for (int serverId : servers) {
@@ -93,7 +89,7 @@ public class PaxosRPC {
                                                                 .setPhase2Value(value)
                                                                 .build();
         ArrayList<DadkvsPaxos.PhaseTwoReply> phaseTwoReplies = new ArrayList<>();
-        GenericResponseCollector<DadkvsPaxos.PhaseTwoReply> responseCollector = new GenericResponseCollector<>(phaseTwoReplies, server_state.n_servers);
+        GenericResponseCollector<DadkvsPaxos.PhaseTwoReply> responseCollector = new GenericResponseCollector<>(phaseTwoReplies, server_state.configurations[config].length);
 
         int[] servers = server_state.configurations[config];
         for (int server : servers) {

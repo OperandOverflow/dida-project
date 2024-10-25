@@ -64,7 +64,7 @@ public class ConsoleConfig {
             // Simulate doing some work.
             System.out.println("Thread is going to crash oh nooo");
             System.out.println("Our threads are broken, but out hearts not!");
-            System.out.println("Unsere Fäden brechen, aber unsere Herzen nicht!");
+            System.out.println("Unsere Faden brechen, aber unsere Herzen nicht!");
             Thread.sleep(1000); // Simulate some process is going on
 
             // Throwing an exception

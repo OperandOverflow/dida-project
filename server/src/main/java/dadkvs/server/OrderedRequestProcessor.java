@@ -19,6 +19,8 @@ public class OrderedRequestProcessor {
 
     private final Queue<Integer> request_order;
 
+    private final HashSet<Integer> request_order_dup_checker;
+
     private final Object queue_lock = new Object();
 
     /** The read-write lock for the key store */
@@ -27,6 +29,7 @@ public class OrderedRequestProcessor {
     public OrderedRequestProcessor(ServerState state) {
         this.server_state = state;
         this.timestamp = 0;
+        this.request_order_dup_checker = new HashSet<>();
         this.request_order = new LinkedList<>();
         this.ks_rwlock = new ReentrantReadWriteLock();
     }
@@ -138,7 +141,12 @@ public class OrderedRequestProcessor {
         System.out.println("[ORP] Received order " + requestId);
         // Add the ordered request to the order list
         synchronized (this.request_order) {
+            if (this.request_order_dup_checker.contains(requestId)) {
+                System.out.println("[ORP] Duplicate order " + requestId);
+                return;
+            }
             this.request_order.add(requestId);
+            this.request_order_dup_checker.add(requestId);
             System.out.println("[ORP] Next in queue: " + this.request_order.peek());
         }
         notifyOrderChange();
