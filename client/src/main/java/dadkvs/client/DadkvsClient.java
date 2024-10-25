@@ -40,15 +40,15 @@ public class DadkvsClient {
 
 	private static final String LINE_SEPARATOR = System.lineSeparator();
 
-	private static final String HELP_MESSAGE = 	"================================= HELP =================================" + LINE_SEPARATOR +
-												" help									- show all commands" + LINE_SEPARATOR +
-												" read <key>							- read value of key" + LINE_SEPARATOR +
-												" tx <read_key> <read_key> <write_key>  - make transaction" + LINE_SEPARATOR +
-												" loop 									- repeatedly makes transactions" + LINE_SEPARATOR +
-												" range <key-range>						- set the range of keys for loop" + LINE_SEPARATOR +
-												" length <loop-length>					- set the number of loops" + LINE_SEPARATOR +
-												" time <sleep-range>					- set the time between iterations" + LINE_SEPARATOR +
-												" exit									- mestre Andre terminates program" + LINE_SEPARATOR;
+	private static final String HELP_MESSAGE = 	"========================== HELP ==========================" + LINE_SEPARATOR +
+												" help - show all commands" + LINE_SEPARATOR +
+												" read <key> - read value of key" + LINE_SEPARATOR +
+												" tx <read_key> <read_key> <write_key> - make transaction" + LINE_SEPARATOR +
+												" loop - repeatedly makes transactions" + LINE_SEPARATOR +
+												" range <key-range> - set the range of keys for loop" + LINE_SEPARATOR +
+												" length <loop-length> - set the number of loops" + LINE_SEPARATOR +
+												" time <sleep-range> - set the time between iterations" + LINE_SEPARATOR +
+												" exit - mestre Andre terminates program" + LINE_SEPARATOR;
 
     
     public DadkvsClient () {
@@ -100,7 +100,7 @@ public class DadkvsClient {
 		if (commit_responses.size() >= responses_needed) {
 			Iterator<DadkvsMain.CommitReply> commit_iterator = commit_responses.iterator();
 			DadkvsMain.CommitReply commit_reply = commit_iterator.next ();
-			System.out.println("\tReqid = " + reqid + " id in reply = " + commit_reply.getReqid());
+			System.out.println("\t[Debug] Reqid = " + reqid + " id in reply = " + commit_reply.getReqid());
 			result = commit_reply.getAck();
 			if (result) {
 				System.out.println("\t[Info] Committed key " + commit_request.getWritekey() + " with value " + commit_request.getWriteval());
@@ -129,8 +129,8 @@ public class DadkvsClient {
 		if (read_responses.size() >= responses_needed) {
 			Iterator<DadkvsMain.ReadReply> read_iterator = read_responses.iterator();
 			DadkvsMain.ReadReply read_reply = read_iterator.next();
-			System.out.println("\tReqid = " + reqid + " id in reply = " + read_reply.getReqid());
-			System.out.println("\tread key " + read_request.getKey() + " = <" + read_reply.getValue() + "," + read_reply.getTimestamp() + ">");
+			System.out.println("\t[Debug] Reqid = " + reqid + " id in reply = " + read_reply.getReqid());
+			System.out.println("\t[Debug] read key " + read_request.getKey() + " = <" + read_reply.getValue() + "," + read_reply.getTimestamp() + ">");
 			VersionedValue kv_entry = new VersionedValue (read_reply.getValue(), read_reply.getTimestamp());;
 			return kv_entry;
 		} else {
@@ -207,8 +207,7 @@ public class DadkvsClient {
 		if (length < 1) {
 			System.err.println("Argument(s) missing!");
 			System.err.printf("Usage: java %s clientid [options]%n", DadkvsClient.class.getName());
-		}
-		else {
+		} else {
 			int id = Integer.parseInt(args[0]);
 			if (id == 0)
 				System.err.println("Client id=0 reserved for console, using client id=1!");

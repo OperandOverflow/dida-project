@@ -13,6 +13,8 @@ public class DadkvsMaster {
 
     private static int port;
 
+    private static final String NEWLINE = System.lineSeparator();
+
     private static final String mestreAndre =
             "@@@@@@@@@@@@@@@@#*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#+\n" +
             "@@@@@@@%%#%@@@@@##@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%*\n" +
@@ -63,10 +65,29 @@ public class DadkvsMaster {
             "@@@@@@@@@@@@@@@@@@@****+==*@@@@@@%%%%%%%%%%%%%%%%%%%%%%%%%%%%#*+*+++==\n" +
             "@@@@@@@@@@@@@@@@@@@*++*-+++@@@@@@@%%%%%%%%%%%%%%%%%%%%%%%%%##++++=+=++\n";
 
+    private static final String master =
+            "                  ." + NEWLINE + NEWLINE +
+            "                   ." + NEWLINE +
+            "         /^\\     ." + NEWLINE +
+            "    /\\   \"V\"" + NEWLINE +
+            "   /__\\   I      O  o" + NEWLINE +
+            "  //..\\\\  I     ." + NEWLINE +
+            "  \\].`[/  I" + NEWLINE +
+            "  /l\\/j\\  (]    .  O" + NEWLINE +
+            " /. ~~ ,\\/I          ." + NEWLINE +
+            " \\\\L__j^\\/I       o" + NEWLINE +
+            "  \\/--v}  I     o   ." + NEWLINE +
+            "  |    |  I   _________" + NEWLINE +
+            "  |    |  I c(`       ')o" + NEWLINE +
+            "  |    l  I   \\.     ,/" + NEWLINE +
+            "_/j  L l\\_!  _//^---^\\\\_ " + NEWLINE +
+            " ~~~~~~~~~~~~~~~~~~~~~~~~~" + NEWLINE +
+            "       Mestre Andre" + NEWLINE;
+
 
 
     public static void main(String[] args) throws Exception {
-        System.out.println(mestreAndre);
+        System.out.println(master);
 
         System.out.println("Vertical Paxos Master - Proudly powered by Mestre Andre'");
 
