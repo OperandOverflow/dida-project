@@ -44,7 +44,7 @@ public class OrderedRequestProcessor {
      */
     public VersionedValue read(ReadRequest request) {
         // For debug purposes
-        System.out.printf("Read request %d entered the queue\n", request.getRequestId());
+        //System.out.printf("Read request %d entered the queue\n", request.getRequestId());
 
         // If the request is the next in the order, process it
         VersionedValue value;
@@ -59,7 +59,7 @@ public class OrderedRequestProcessor {
         notifyOrderChange();
 
         // For debug purposes
-        System.out.printf("Read request %d processed\n", request.getRequestId());
+        //System.out.printf("Read request %d processed\n", request.getRequestId());
 
         return value;
     }
@@ -76,7 +76,7 @@ public class OrderedRequestProcessor {
 
     public boolean committx(CommitRequest request) {
         // For debug purposes
-        System.out.printf("Commit request %d entered the queue\n", request.getRequestId());
+        //System.out.printf("[ORP] Commit request %d entered the queue\n", request.getRequestId());
 
         // Check if the request is the next in the order
         Integer nextRequest;
@@ -85,7 +85,7 @@ public class OrderedRequestProcessor {
         }
         while (nextRequest == null || nextRequest != request.getRequestId()) {
             // For debug purposes
-            System.out.printf("Commit request %d waiting\n", request.getRequestId());
+            //System.out.printf("[ORP] Commit request %d waiting\n", request.getRequestId());
 
             // If not the next in the order, wait for the order to change
             waitForOrder();
@@ -112,7 +112,7 @@ public class OrderedRequestProcessor {
         notifyOrderChange();
 
         // For debug purposes
-        System.out.printf("Commit request %d processed\n", request.getRequestId());
+        //System.out.printf("[ORP] Commit request %d processed\n", request.getRequestId());
 
         return result;
     }

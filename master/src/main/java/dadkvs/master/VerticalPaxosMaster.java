@@ -50,7 +50,7 @@ public class VerticalPaxosMaster {
         // If the leader doesn't belong to the current configuration, it can't be the leader
         if (configs[currentConfig][leaderId] == -1){
             System.out.println("[Error] Leader doesn't belong to the current configuration");
-            System.out.println("            at current configuration: " + currentConfig);
+            System.out.println("            leader id: " + currentLeader + " at configuration: " + this.currentConfig);
             return false;
         }
 
@@ -74,7 +74,7 @@ public class VerticalPaxosMaster {
         // If the current leader doesn't belong to the new configuration, it can't be the leader
         if (configs[config][currentLeader] == -1) {
             System.out.println("[Error] Current leader doesn't belong to the new configuration");
-            System.out.println("            at new configuration: " + config);
+            System.out.println("            leader id: " + currentLeader + " at configuration: " + config);
             return false;
         }
 
