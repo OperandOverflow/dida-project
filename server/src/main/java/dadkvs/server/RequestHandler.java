@@ -37,9 +37,7 @@ public class RequestHandler {
     public boolean handleCommitRequest(CommitRequest request) {
         this.server_state.consoleConfig.goDebug();
         if (this.server_state.i_am_leader.get()) {
-            Thread thread = new Thread(() -> {
-                this.server_state.proposer.propose(request.getRequestId());
-            });
+            Thread thread = new Thread(() -> this.server_state.proposer.propose(request.getRequestId()));
             thread.start();
         }
 
