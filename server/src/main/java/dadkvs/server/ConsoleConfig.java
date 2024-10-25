@@ -43,20 +43,22 @@ public class ConsoleConfig {
             this.server_state.debug_mode.set(mode);
     }
 
-    public void goDebug() {
-        switch (this.server_state.debug_mode.get()) {
-            case 1, 6:
+    public boolean goDebug() {
+        return switch (this.server_state.debug_mode.get()) {
+            case 1 -> {
                 crashThread();
-                break;
-            case 2:
+                yield true;
+            }
+            case 2 -> {
                 freezeThread();
-                break;
-            case 4:
+                yield true;
+            }
+            case 4 -> {
                 randomSlow();
-                break;
-            default:
-                break;
-        }
+                yield true;
+            }
+            default -> false;
+        };
     }
 
     private void crashThread() {

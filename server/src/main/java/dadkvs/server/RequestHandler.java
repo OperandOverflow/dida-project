@@ -65,6 +65,7 @@ public class RequestHandler {
      */
     public void startOrderRequests() {
         List<AbsRequest> pendingRequests = this.getPendingRequests();
+        pendingRequests.forEach(request -> System.out.println("Request " + request.getRequestId() + " is pending."));
         for (AbsRequest request : pendingRequests) {
             this.server_state.proposer.propose(request.getRequestId());
         }
@@ -77,5 +78,7 @@ public class RequestHandler {
      */
     public void removePendingRequest(int requestId) {
         this.request_queue.removeRequest(requestId);
+        System.out.println("Request " + requestId + " removed from pending requests.");
+        getPendingRequests().forEach(request -> System.out.println("\t" + request.getRequestId()));
     }
 }

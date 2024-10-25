@@ -21,6 +21,15 @@ message ReconfigReply {
   bool ack = 1;
 }
 
+message ReconfigChangeLeaderRequest {
+  int32 serverid = 1;
+  int32 confignum = 2;
+}
+
+message ReconfigChangeLeaderReply {
+  bool ack = 1;
+}
+
 message Complete {
   int32 ballotnum = 1;
 }
@@ -32,5 +41,6 @@ message Activated {
 service DadkvsMasterService {
   rpc setleader(DefineLeaderRequest) returns (DefineLeaderReply);
   rpc reconfig(ReconfigRequest) returns (ReconfigReply);
+  rpc reconfigchangeleader(ReconfigChangeLeaderRequest) returns (ReconfigChangeLeaderReply);
   rpc complete(Complete) returns (Activated);
 }

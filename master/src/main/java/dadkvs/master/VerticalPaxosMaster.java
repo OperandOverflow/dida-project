@@ -102,6 +102,37 @@ public class VerticalPaxosMaster {
         return result;
     }
 
+    public boolean reconfigChangeLeader(int leaderId, int config) {
+        System.out.println("[Info] Reconfiguring to: " + config + " with leader: " + leaderId);
+        if (config >= configs.length || config < 0) {
+            System.out.println("[Error] Invalid configuration: " + config);
+            return false;
+        }
+
+        if (leaderId >= configs[config].length || leaderId < 0) {
+            System.out.println("[Error] Invalid leader id: " + leaderId);
+            return false;
+        }
+
+        if (configs[config][leaderId] == -1) {
+            System.out.println("[Error] Current leader doesn't belong to the new configuration");
+            System.out.println("            leader id: " + currentLeader + " at configuration: " + config);
+            return false;
+        }
+
+        pendingBallotNumber = nextBallotNumber;
+        nextBallotNumber++;
+        boolean result = rpc.invokeNewBallot(pendingBallotNumber, config, currentConfig, leaderId);
+        if (result) {
+            prevConfig = currentConfig;
+            currentConfig = config;
+            currentLeader = leaderId;
+        }
+        System.out.println("[Debug] Pending ballot number: " + pendingBallotNumber);
+        System.out.println("[Info] New Ballot response: " + result);
+        return result;
+    }
+
     public synchronized boolean completed(int ballotNum){
         System.out.println("[Info] Completed: " + ballotNum);
         if (ballotNum != pendingBallotNumber) {

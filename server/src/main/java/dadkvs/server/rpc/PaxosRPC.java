@@ -92,10 +92,16 @@ public class PaxosRPC {
         GenericResponseCollector<DadkvsPaxos.PhaseTwoReply> responseCollector = new GenericResponseCollector<>(phaseTwoReplies, server_state.configurations[config].length);
 
         int[] servers = server_state.configurations[config];
-        for (int server : servers) {
+        for (int i = 0; i < servers.length; i++) {
             StreamObserver<DadkvsPaxos.PhaseTwoReply> phaseTwoObserver = new CollectorStreamObserver<>(responseCollector);
-            this.paxos_stubs[server].phasetwo(phaseTwoRequest, phaseTwoObserver);
-            this.server_state.consoleConfig.goDebug();
+            this.paxos_stubs[servers[i]].phasetwo(phaseTwoRequest, phaseTwoObserver);
+            if (i == 0)
+                if (this.server_state.debug_mode.get() == 6) {
+                    System.out.println("Crashing the server with consensus number: " + consensusNumber + " and round number: " + roundNumber + " and value: " + value);
+                    server_state.shutdown();
+                    System.exit(0);
+                    break;
+                }
         }
         responseCollector.waitForTarget(server_state.configurations[config].length);
         List<AcceptedMsg> accepted = new ArrayList<>();

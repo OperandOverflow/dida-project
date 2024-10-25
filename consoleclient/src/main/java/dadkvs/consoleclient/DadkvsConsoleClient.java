@@ -44,6 +44,7 @@ public class DadkvsConsoleClient {
 										"         6 - crash after sending some Accept" + LINE_SEPARATOR +
 										"         7 - reset crash after sending Accept" + LINE_SEPARATOR +
 										" reconfig <configuration>" + LINE_SEPARATOR +
+										" reconfleader <leader> <configuration>" + LINE_SEPARATOR +
 										" exit" + LINE_SEPARATOR;
 
 
@@ -185,6 +186,35 @@ public class DadkvsConsoleClient {
 						System.out.println("\treconfig not acknowledged");
 				} catch (NumberFormatException e) {
 					System.out.println("\t[Error] Usage: reconfig <configuration>");
+				}
+				break;
+
+			case "reconfleader":
+				System.out.println("\treconfleader " + parameter1 + " " + parameter2);
+				if (parameter1 == null || parameter2 == null) {
+					System.out.println("\t[Error] Usage: reconfleader <leader> <configuration>");
+					break;
+				}
+				try {
+					replica = Integer.parseInt(parameter1);
+					configuration = Integer.parseInt(parameter2);
+					System.out.println("\treconfiguring to configuration " + configuration + " with leader " + replica);
+
+					DadkvsMaster.ReconfigChangeLeaderRequest.Builder reconfleader_request = DadkvsMaster.ReconfigChangeLeaderRequest.newBuilder();
+					ArrayList<DadkvsMaster.ReconfigChangeLeaderReply> reconfleader_responses = new ArrayList<>();
+					GenericResponseCollector<DadkvsMaster.ReconfigChangeLeaderReply> reconfleader_collector = new GenericResponseCollector<>(reconfleader_responses, 1);
+					CollectorStreamObserver<DadkvsMaster.ReconfigChangeLeaderReply> reconfleader_observer = new CollectorStreamObserver<>(reconfleader_collector);
+					reconfleader_request.setConfignum(configuration).setServerid(replica);
+					master_async_stub.reconfigchangeleader(reconfleader_request.build(), reconfleader_observer);
+					reconfleader_collector.waitForTarget(1);
+					if (!reconfleader_responses.isEmpty()) {
+						Iterator<DadkvsMaster.ReconfigChangeLeaderReply> reconfleader_iterator = reconfleader_responses.iterator();
+						DadkvsMaster.ReconfigChangeLeaderReply reconfleader_reply = reconfleader_iterator.next();
+						System.out.println("\tReply = " + reconfleader_reply.getAck());
+					} else
+						System.out.println("\t[Error] No reply received");
+				} catch (NumberFormatException e) {
+					System.out.println("\t[Error] Usage: reconfleader <leader>::int <configuration>::int");
 				}
 				break;
 

@@ -40,6 +40,19 @@ public class DadkvsMasterServiceImpl extends DadkvsMasterServiceGrpc.DadkvsMaste
     }
 
     @Override
+    public void reconfigchangeleader(DadkvsMaster.ReconfigChangeLeaderRequest request, StreamObserver<DadkvsMaster.ReconfigChangeLeaderReply> responseObserver) {
+        int config = request.getConfignum();
+        int leaderId = request.getServerid();
+
+        boolean result = master.reconfigChangeLeader(config, leaderId);
+
+        DadkvsMaster.ReconfigChangeLeaderReply reply = DadkvsMaster.ReconfigChangeLeaderReply.newBuilder().setAck(result).build();
+
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void complete(DadkvsMaster.Complete request, StreamObserver<DadkvsMaster.Activated> responseObserver) {
         int ballot = request.getBallotnum();
 
