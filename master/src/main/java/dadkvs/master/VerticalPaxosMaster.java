@@ -80,7 +80,8 @@ public class VerticalPaxosMaster {
 
         pendingBallotNumber = nextBallotNumber;
         nextBallotNumber++;
-        boolean result = rpc.invokeNewBallot(pendingBallotNumber, currentConfig, prevConfig, currentLeader);
+        //tavamos a mandar invokeNewBallot(pendingBallotNumber, currentConfig,...)
+        boolean result = rpc.invokeNewBallot(pendingBallotNumber, config, currentConfig, currentLeader);
         if (result) {
             prevConfig = currentConfig;
             currentConfig = config;
