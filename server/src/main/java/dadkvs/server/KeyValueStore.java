@@ -29,9 +29,9 @@ public class KeyValueStore {
     }
 
     synchronized public boolean commit(TransactionRecord tr) {
-        System.out.println("[KVS] Store commit read first key = " + tr.getRead1Key() + " with version = " + tr.getRead1Version()  + "  and current version = " + this.read(tr.getRead1Key()).getVersion());
-        System.out.println("[KVS] Store commit read second key = " + tr.getRead2Key()  + " with version = " + tr.getRead2Version()  + " and current version = " + this.read(tr.getRead2Key()).getVersion());
-        System.out.println("[KVS] Store commit write key  " + tr.getPrepareKey()  + " with value = " + tr.getPrepareValue() + " and version " + tr.getTimestamp());
+        System.out.println("[KVS] Store commit read <key1 = " + tr.getRead1Key() + ", version = " + tr.getRead1Version()  + "> and current version = " + this.read(tr.getRead1Key()).getVersion());
+        System.out.println("[KVS] Store commit read <key2 = " + tr.getRead2Key()  + ", version = " + tr.getRead2Version()  + "> and current version = " + this.read(tr.getRead2Key()).getVersion());
+        System.out.println("[KVS] Store commit write <key = " + tr.getPrepareKey()  + ", value = " + tr.getPrepareValue() + "> and version " + tr.getTimestamp());
         if (this.read(tr.getRead1Key()).getVersion() == tr.getRead1Version() &&
             this.read(tr.getRead2Key()).getVersion() == tr.getRead2Version()) {
             VersionedValue vv = new VersionedValue(tr.getPrepareValue(), tr.getTimestamp());

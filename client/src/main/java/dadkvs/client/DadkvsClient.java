@@ -38,6 +38,16 @@ public class DadkvsClient {
     ManagedChannel[] channels;
     DadkvsMainServiceGrpc.DadkvsMainServiceStub[] async_stubs;
 
+	private static final String HELP_MESSAGE = 	"=============== HELP ===============\n" +
+												" help\n" +
+												" read <key>\n" +
+												" tx <read_key> <read_key> <write_key>\n" +
+												" loop \n" +
+												" range <key-range>\n" +
+												" length <loop-length>\n" +
+												" time <sleep-range>\n" +
+												" exit\n";
+
     
     public DadkvsClient () {
 		interactive_mode = false;
@@ -71,10 +81,10 @@ public class DadkvsClient {
 			.setWritekey(write_key)
 			.setWriteval(write_value);
 
-		System.out.println("Reqid " + reqid);
-		System.out.println("Read1 key " + key1 + " with version " + key1_version);
-		System.out.println("Read1 key " + key2 + " with version " + key2_version);
-		System.out.println("Write key " + write_key + " with value " + write_value);
+		System.out.println("\tReqid " + reqid);
+		System.out.println("\tRead1 key " + key1 + " with version " + key1_version);
+		System.out.println("\tRead1 key " + key2 + " with version " + key2_version);
+		System.out.println("\tWrite key " + write_key + " with value " + write_value);
 	
 	
 		ArrayList<DadkvsMain.CommitReply> commit_responses = new ArrayList<DadkvsMain.CommitReply>();
@@ -88,15 +98,15 @@ public class DadkvsClient {
 		if (commit_responses.size() >= responses_needed) {
 			Iterator<DadkvsMain.CommitReply> commit_iterator = commit_responses.iterator();
 			DadkvsMain.CommitReply commit_reply = commit_iterator.next ();
-			System.out.println("Reqid = " + reqid + " id in reply = " + commit_reply.getReqid());
+			System.out.println("\tReqid = " + reqid + " id in reply = " + commit_reply.getReqid());
 			result = commit_reply.getAck();
 			if (result) {
-				System.out.println("Committed key " + commit_request.getWritekey() + " with value " + commit_request.getWriteval());
+				System.out.println("\t[Info] Committed key " + commit_request.getWritekey() + " with value " + commit_request.getWriteval());
 			} else {
-				System.out.println("Commit Failed");
+				System.out.println("\t[Error] Commit Failed");
 			}
 		} else
-			System.out.println("Panic...error commiting");
+			System.out.println("\t[Error] Panic...error commiting");
 		return result;
     }
      
@@ -117,12 +127,12 @@ public class DadkvsClient {
 		if (read_responses.size() >= responses_needed) {
 			Iterator<DadkvsMain.ReadReply> read_iterator = read_responses.iterator();
 			DadkvsMain.ReadReply read_reply = read_iterator.next();
-			System.out.println("Reqid = " + reqid + " id in reply = " + read_reply.getReqid());
-			System.out.println("read key " + read_request.getKey() + " = <" + read_reply.getValue() + "," + read_reply.getTimestamp() + ">");
+			System.out.println("\tReqid = " + reqid + " id in reply = " + read_reply.getReqid());
+			System.out.println("\tread key " + read_request.getKey() + " = <" + read_reply.getValue() + "," + read_reply.getTimestamp() + ">");
 			VersionedValue kv_entry = new VersionedValue (read_reply.getValue(), read_reply.getTimestamp());;
 			return kv_entry;
 		} else {
-			System.out.println("error reading");
+			System.out.println("\t[Error] Error reading");
 			return null;
 		}
     }
@@ -284,40 +294,33 @@ public class DadkvsClient {
 
             switch (mainCommand) {
 	        	case "help":
-                    System.out.println("\thelp");
-                    System.out.println("\tread key");
-					System.out.println("\ttx read_key read_key write_key");
-					System.out.println("\tloop");
-					System.out.println("\trange key-range");
-					System.out.println("\tlenght loop-lenght");
-					System.out.println("\ttime sleep-range");
-					System.out.println("\texit");
+                    System.out.println(HELP_MESSAGE);
                     break;
                 case "read":
-		    		System.out.println("read " + parameter1);
+		    		System.out.println("\t[Info] read " + parameter1);
                     if (parameter1 != null) {
 						try {
 							int key =  Integer.parseInt(parameter1);
 							VersionedValue kv_entry  = doRead (key);
 							if (kv_entry != null)
-								System.out.println("did read " + key + " with value " + kv_entry.getValue() + " and version " + kv_entry.getVersion());
+								System.out.println("\tResult: key = " + key + ", value = " + kv_entry.getValue() + ", version = " + kv_entry.getVersion());
 							else
-								System.out.println("failed to read " + key);
+								System.out.println("\t[Error] Failed to read " + key);
 						} catch (NumberFormatException e) {
-							System.out.println("usage: read key");
+							System.out.println("\t[Error] Usage: read <key>");
 		       			 }
 					} else
-						System.out.println("usage: read key");
+						System.out.println("\t[Error] Usage: read <key>");
 					break;
 	        	case "tx":
-		    		System.out.println("tx reading key " + parameter1 + " and key " + parameter2 + " : writting key " + parameter3);
+		    		System.out.println("\t[Info] tx reading key: " + parameter1 + " and key: " + parameter2 + " -> writing key: " + parameter3);
                     if ((parameter1 != null) && (parameter2!=null) && (parameter3!=null)) {
 						try {
 							int read_key1 =  Integer.parseInt(parameter1);
 							int read_key2 =  Integer.parseInt(parameter2);
 							int write_key = Integer.parseInt(parameter3);
 							if (write_key == 0)
-								System.out.println("key 0 is reserverded for reconfiguration!");
+								System.out.println("\t[Error] key 0 is reserved for reconfiguration!");
 							else {
 								int write_value = rnd.nextInt(1000);
 								VersionedValue kv_entry1 = doRead (read_key1);
@@ -325,24 +328,24 @@ public class DadkvsClient {
 								if ((kv_entry1!=null) && (kv_entry2!=null))
 									doCommit (read_key1, kv_entry1.getVersion(), read_key2, kv_entry2.getVersion(), write_key, write_value);
 								else
-									System.out.println("failed to read keys");
+									System.out.println("\t[Error] Failed to read keys");
 							}
 						} catch (NumberFormatException e) {
-							System.out.println("usage: read key");
+							System.out.println("\t[Error] Usage: tx <read_key> <read_key> <write_key>");
 						}
 					} else
-                        System.out.println("usage: tx read_key read_key write_key");
+                        System.out.println("\t[Error] Usage: tx <read_key> <read_key> <write_key>");
 		    		break;
-	        	case "lenght":
-		    		System.out.println("lenght " + parameter1);
+	        	case "length":
+		    		System.out.println("\t[Info] length " + parameter1);
                     if (parameter1 != null) {
 						try {
 							 loop_size=  Integer.parseInt(parameter1);
 						} catch (NumberFormatException e) {
-							System.out.println("usage: lenght loop-lenght");
+							System.out.println("\t[Error] Usage: length <loop-length>");
 						}
 					} else
-						System.out.println("usage: lenght loop-lenght");
+						System.out.println("\t[Error] Usage: length <loop-length>");
                     break;
 	        	case "range":
 		    		System.out.println("range " + parameter1);
