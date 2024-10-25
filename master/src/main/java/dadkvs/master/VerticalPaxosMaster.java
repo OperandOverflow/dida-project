@@ -47,6 +47,11 @@ public class VerticalPaxosMaster {
         if (!isLeader)
             return false;
 
+        if (leaderId >= configs[currentConfig].length || leaderId < 0) {
+            System.out.println("[Error] Invalid leader id: " + leaderId);
+            return false;
+        }
+
         // If the leader doesn't belong to the current configuration, it can't be the leader
         if (configs[currentConfig][leaderId] == -1){
             System.out.println("[Error] Leader doesn't belong to the current configuration");
