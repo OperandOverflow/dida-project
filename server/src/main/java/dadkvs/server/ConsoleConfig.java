@@ -45,7 +45,7 @@ public class ConsoleConfig {
 
     public void goDebug() {
         switch (this.server_state.debug_mode.get()) {
-            case 1:
+            case 1, 6:
                 crashThread();
                 break;
             case 2:
@@ -69,6 +69,7 @@ public class ConsoleConfig {
 
             // Throwing an exception
             //throw new RuntimeException("Runtime exception for debug mode - crash");
+            this.server_state.shutdown();
             System.exit(-1);
         } catch (InterruptedException e) {
             // Handle interrupted thread.

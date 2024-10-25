@@ -35,6 +35,14 @@ public class DadkvsConsoleClient {
 	static final String HELP_MESSAGE = 	"================ Help ================" + LINE_SEPARATOR +
 										" leader on <replica>" + LINE_SEPARATOR +
 										" debug <mode> <replica>" + LINE_SEPARATOR +
+										"  modes: 0 - reset to default" + LINE_SEPARATOR +
+										"         1 - crash immediately" + LINE_SEPARATOR +
+										"         2 - freeze" + LINE_SEPARATOR +
+										"         3 - unfreeze" + LINE_SEPARATOR +
+										"         4 - slow" + LINE_SEPARATOR +
+										"         5 - unslow" + LINE_SEPARATOR +
+										"         6 - crash after sending some Accept" + LINE_SEPARATOR +
+										"         7 - reset crash after sending Accept" + LINE_SEPARATOR +
 										" reconfig <configuration>" + LINE_SEPARATOR +
 										" exit" + LINE_SEPARATOR;
 
@@ -143,11 +151,11 @@ public class DadkvsConsoleClient {
 					if (!setdebug_responses.isEmpty()) {
 						Iterator<DadkvsConsole.SetDebugReply> setdebug_iterator = setdebug_responses.iterator();
 						DadkvsConsole.SetDebugReply setdebug_reply = setdebug_iterator.next();
-						System.out.println("\treply = " + setdebug_reply.getAck());
+						System.out.println("\tReply = " + setdebug_reply.getAck());
 					} else
 						System.out.println("\t[Error] No reply received");
 				} catch (NumberFormatException e) {
-				   System.out.println("\t[Error] Usage: debug <mode> <replica>");
+				   System.out.println("\t[Error] Usage: debug <mode>::int <replica>::int");
 				}
 				break;
 

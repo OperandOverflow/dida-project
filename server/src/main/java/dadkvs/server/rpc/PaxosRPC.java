@@ -16,6 +16,7 @@ import io.grpc.stub.StreamObserver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class is dedicated to invoke gRPC methods for Paxos
@@ -24,6 +25,7 @@ public class PaxosRPC {
 
     private final ServerState server_state;
 
+    private ManagedChannel[] channels;
     private DadkvsPaxosServiceGrpc.DadkvsPaxosServiceStub[] paxos_stubs;
     private DadkvsMasterServiceGrpc.DadkvsMasterServiceStub master_stub;
 
@@ -41,6 +43,18 @@ public class PaxosRPC {
 
         ManagedChannel master_channel = ManagedChannelBuilder.forAddress(server_state.ip_address, server_state.master_port).usePlaintext().build();
         this.master_stub = DadkvsMasterServiceGrpc.newStub(master_channel);
+    }
+
+    public void shutdown() throws InterruptedException {
+        for (int i = 0; i < server_state.n_servers; i++) {
+            if (channels[i] == null)
+                continue;
+            channels[i].awaitTermination(5, TimeUnit.SECONDS);
+            if (!channels[i].isTerminated()) {
+                System.out.println("Forcing channel shutdown...");
+                channels[i].shutdownNow();
+            }
+        }
     }
 
     public List<PromiseMsg> invokePrepare(int consensusNumber, int roundNumber, int config) {
@@ -85,6 +99,7 @@ public class PaxosRPC {
         for (int server : servers) {
             StreamObserver<DadkvsPaxos.PhaseTwoReply> phaseTwoObserver = new CollectorStreamObserver<>(responseCollector);
             this.paxos_stubs[server].phasetwo(phaseTwoRequest, phaseTwoObserver);
+            this.server_state.consoleConfig.goDebug();
         }
         responseCollector.waitForTarget(server_state.configurations[config].length);
         List<AcceptedMsg> accepted = new ArrayList<>();
