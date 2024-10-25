@@ -90,9 +90,16 @@ public class Acceptor {
 
         // If the consensus data is not found, i.e. didn't receive prepare for this consensus
         if (acceptorData == null) {
-            // Reply with a negative accept
-            acceptedMsg.accepted = false;
-            System.out.println("[Acc] No prepare received for consensus: " + consensusIndex);
+            System.out.println("[Acce] Creating a new record for: " + consensusIndex);
+            // Create a new structure to hold the data
+            AcceptorData newAcceptorData = new AcceptorData();
+            newAcceptorData.highestPromisedRoundNumber = roundNumber;
+            newAcceptorData.acceptedRoundNumber = roundNumber;
+            newAcceptorData.acceptedValue = value;
+            this.acceptorRecord.put(consensusIndex, newAcceptorData);
+
+            acceptedMsg.accepted = true;
+            serverState.paxos_rpc.invokeLearn(consensusIndex, roundNumber, 0, value);
             return acceptedMsg;
         }
 
@@ -114,7 +121,6 @@ public class Acceptor {
         // Reply with a affirmative accept
         acceptedMsg.accepted = true;
         // Send learn message to all learners
-        // TODO: add config number
         serverState.paxos_rpc.invokeLearn(consensusIndex, roundNumber, 0, value);
         return acceptedMsg;
     }
