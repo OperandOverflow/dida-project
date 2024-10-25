@@ -51,7 +51,7 @@ public class DadkvsConsoleClient {
 
 		// check arguments
 		if (args.length < 2) {
-			System.err.println("Argument(s) missing!");
+			System.err.println("[Error] Argument(s) missing!");
 			System.err.printf("Usage: java %s <host> <port>" + LINE_SEPARATOR, DadkvsConsoleClient.class.getName());
 			return;
 		}
@@ -81,18 +81,17 @@ public class DadkvsConsoleClient {
 
 			case "leader":
 				if (parameter1 == null || parameter2 == null) {
-					System.out.println("usage: leader on <replica>");
+					System.out.println("\t[Error] Usage: leader on <replica>");
 					break;
 				}
-				System.out.println("leader " + parameter1 + " " + parameter2);
 				if(parameter1.equals("off")){
-					System.out.println("[Error] Can only turn leader on - \n" +
-										"'leader off' responsibility is off to the Master");
+					System.out.println("\t[Error] Can only turn leader on - \n" +
+										"\t'leader off' responsibility is off to the Master");
 					break;
 				}
 
 				if (!parameter1.equals("on")) {
-					System.out.println("usage: leader on <replica>");
+					System.out.println("\t[Error] Usage: leader on <replica>");
 					break;
 				}
 
@@ -100,7 +99,7 @@ public class DadkvsConsoleClient {
 
 				try {
 					replica = Integer.parseInt(parameter2);
-					System.out.println("setting leader " + isleader + " replica " + replica);
+					System.out.println("\t[Info] Setting leader " + isleader + " replica " + replica);
 
 					DadkvsMaster.DefineLeaderRequest.Builder setleader_request = DadkvsMaster.DefineLeaderRequest.newBuilder();
 					setleader_request.setIsleader(isleader).setServerid(replica);
@@ -114,24 +113,24 @@ public class DadkvsConsoleClient {
 					if (!setleader_responses.isEmpty()) {
 						Iterator<DadkvsMaster.DefineLeaderReply> setleader_iterator = setleader_responses.iterator();
 						DadkvsMaster.DefineLeaderReply setleader_reply = setleader_iterator.next();
-						System.out.println("reply = " + setleader_reply.getIsleaderack());
+						System.out.println("\treply = " + setleader_reply.getIsleaderack());
 					} else
-						System.out.println("no reply received");
+						System.out.println("\t[Error] No reply received");
 				} catch (NumberFormatException e) {
-					System.out.println("usage: leader on <replica>");
+					System.out.println("\t[Error] Usage: leader on <replica>");
 				}
 				break;
 
 			case "debug":
-				System.out.println("debug " + parameter1 + " " + parameter2);
+				System.out.println("\tdebug " + parameter1 + " " + parameter2);
 				if (parameter1 == null || parameter2 == null) {
-					System.out.println("usage: debug <mode> <replica>");
+					System.out.println("\t[Error] Usage: debug <mode> <replica>");
 					break;
 				}
 				try {
 					mode  =  Integer.parseInt(parameter1);
 					replica =  Integer.parseInt(parameter2);
-					System.out.println("setting debug with mode " + mode + " on replica " + replica);
+					System.out.println("\tsetting debug with mode " + mode + " on replica " + replica);
 
 
 					DadkvsConsole.SetDebugRequest.Builder setdebug_request = DadkvsConsole.SetDebugRequest.newBuilder();
@@ -144,24 +143,24 @@ public class DadkvsConsoleClient {
 					if (!setdebug_responses.isEmpty()) {
 						Iterator<DadkvsConsole.SetDebugReply> setdebug_iterator = setdebug_responses.iterator();
 						DadkvsConsole.SetDebugReply setdebug_reply = setdebug_iterator.next();
-						System.out.println("reply = " + setdebug_reply.getAck());
+						System.out.println("\treply = " + setdebug_reply.getAck());
 					} else
-						System.out.println("no reply received");
+						System.out.println("\t[Error] No reply received");
 				} catch (NumberFormatException e) {
-				   System.out.println("usage: debug <mode> <replica>");
+				   System.out.println("\t[Error] Usage: debug <mode> <replica>");
 				}
 				break;
 
 			case "reconfig":
-				System.out.println("reconfig " + parameter1);
+				System.out.println("\treconfig " + parameter1);
 				int responses_needed = 1;
 				if (parameter1 == null) {
-					System.out.println("usage: reconfig <configuration>");
+					System.out.println("\t[Error] Usage: reconfig <configuration>");
 					break;
 				}
 				try {
 					configuration  =  Integer.parseInt(parameter1);
-					System.out.println("reconfiguring to configuration " + configuration);
+					System.out.println("\treconfiguring to configuration " + configuration);
 
 					DadkvsMaster.ReconfigRequest.Builder reconfig_request = DadkvsMaster.ReconfigRequest.newBuilder();
 					ArrayList<DadkvsMaster.ReconfigReply> reconfig_response = new ArrayList<>();
@@ -173,11 +172,11 @@ public class DadkvsConsoleClient {
 					reconfig_collector.waitForTarget(1);
 
 					if (reconfig_response.getFirst().getAck()) {
-						System.out.println("reconfig acknowledged");
+						System.out.println("\treconfig acknowledged");
 					} else
-						System.out.println("reconfig not acknowledged");
+						System.out.println("\treconfig not acknowledged");
 				} catch (NumberFormatException e) {
-					System.out.println("usage: reconfig <configuration>");
+					System.out.println("\t[Error] Usage: reconfig <configuration>");
 				}
 				break;
 
@@ -189,7 +188,7 @@ public class DadkvsConsoleClient {
 				break;
 
 			default:
-				System.out.println("Unknown command: " + mainCommand);
+				System.out.println("\t[Error] Unknown command: " + mainCommand);
 				break;
 			}
 		}
@@ -197,14 +196,14 @@ public class DadkvsConsoleClient {
     }
 
 	private static void initiate(String[] args) {
-		System.out.println("initiating console client");// set servers
+		System.out.println("[Info] Initiating console client");// set servers
 		host = args[0];
 		port = Integer.parseInt(args[1]);
 		targets  = new String[n_servers];
 		for (int i = 0; i < n_servers; i++) {
 			int target_port = port +i;
 			targets[i] = host + ":" + target_port;
-			System.out.printf("targets[%d] = %s%n", i, targets[i]);
+			System.out.printf("[Info] targets[%d] = %s%n", i, targets[i]);
 		}
 
 		// Let us use plaintext communication because we do not have certificates
@@ -228,7 +227,7 @@ public class DadkvsConsoleClient {
 	}
 
 	private static void terminate() {
-		System.out.println("terminating console client");
+		System.out.println("[Info] Terminating console client");
 		for (int i = 0; i < n_servers; i++) {
 			channels[i].shutdownNow();
 		}
