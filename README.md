@@ -60,7 +60,14 @@ The console client opens a terminal from where students may issue configuration 
 - `leader on/off replica_id` - Instructs a replica to start/stop acting as a Paxos leader;
 - `debug mode replica_id` - Activates debug on a given replica;
 - `reconfig configuration` - Executes a transaction on key 0 to change the configuration;
+- `reconfleader leader_id configuration` - Activates the leader with the given id and changes the configuration;
 - `exit` - Gracefully finishes the console.
+
+## Master
+
+The master module is the Master in Vertical Paxos. It is executed by running the following command in the *master* directory:
+
+`mvn exec:java`
 
 ## Protobuffs and Utils
 
