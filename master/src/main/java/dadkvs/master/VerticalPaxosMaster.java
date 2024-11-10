@@ -2,8 +2,6 @@ package dadkvs.master;
 
 import dadkvs.master.rpc.MasterRPC;
 
-import java.util.LinkedHashSet;
-
 public class VerticalPaxosMaster {
 
     private MasterRPC rpc;
@@ -23,8 +21,8 @@ public class VerticalPaxosMaster {
             {-1, -1,  2,  3,  4}
     };
 
-    private int prevConfig;
-    private int currentConfig;
+    private int pendingConfig;
+    private int completedConfig;
 
     private int currentLeader;
 
@@ -35,33 +33,39 @@ public class VerticalPaxosMaster {
         this.pendingBallotNumber = -1;
         this.nextBallotNumber = largestCompleteBallotNumber + 1;
 
-        this.prevConfig = 0;
-        this.currentConfig = 0;
+        this.completedConfig = 0;
+        this.pendingConfig = -1;
 
         this.currentLeader = -1;
     }
 
+    /**
+     * Activates a leader in the current configuration
+     * @param isLeader true if the leader is being activated, false if it's being deactivated
+     * @param leaderId the id of the leader to be activated
+     * @return true if the leader was activated, false otherwise
+     */
     public boolean setLeader(boolean isLeader, int leaderId){
         System.out.println("[Info] Activating leader with id: " + leaderId);
         // Vertical Paxos only allows leader activation
         if (!isLeader)
             return false;
 
-        if (leaderId >= configs[currentConfig].length || leaderId < 0) {
+        if (leaderId >= configs[completedConfig].length || leaderId < 0) {
             System.out.println("[Error] Invalid leader id: " + leaderId);
             return false;
         }
 
         // If the leader doesn't belong to the current configuration, it can't be the leader
-        if (configs[currentConfig][leaderId] == -1){
+        if (configs[completedConfig][leaderId] == -1){
             System.out.println("[Error] Leader doesn't belong to the current configuration");
-            System.out.println("            leader id: " + currentLeader + " at configuration: " + this.currentConfig);
+            System.out.println("            leader id: " + currentLeader + " at configuration: " + this.completedConfig);
             return false;
         }
 
         pendingBallotNumber = nextBallotNumber;
         nextBallotNumber++;
-        boolean result = rpc.invokeNewBallot(pendingBallotNumber, currentConfig, currentConfig, leaderId);
+        boolean result = rpc.invokeNewBallot(pendingBallotNumber, completedConfig, completedConfig, leaderId);
         if (result)
             currentLeader = leaderId;
 
@@ -71,9 +75,14 @@ public class VerticalPaxosMaster {
         return result;
     }
 
+    /**
+     * Reconfigures the system to a new configuration
+     * @param config the new configuration to be set
+     * @return true if the reconfiguration was successful, false otherwise
+     */
     public boolean reconfig(int config){
         System.out.println("[Info] Reconfiguring to: " + config);
-        if (config == currentConfig)
+        if (config == completedConfig)
             return true;
 
         if (config >= configs.length || config < 0) {
@@ -91,10 +100,9 @@ public class VerticalPaxosMaster {
         pendingBallotNumber = nextBallotNumber;
         nextBallotNumber++;
         //tavamos a mandar invokeNewBallot(pendingBallotNumber, currentConfig,...)
-        boolean result = rpc.invokeNewBallot(pendingBallotNumber, config, currentConfig, currentLeader);
+        boolean result = rpc.invokeNewBallot(pendingBallotNumber, config, completedConfig, currentLeader);
         if (result) {
-            prevConfig = currentConfig;
-            currentConfig = config;
+            pendingConfig = config;
         }
         System.out.println("[Debug] Pending ballot number: " + pendingBallotNumber);
         System.out.println("[Info] New Ballot response: " + result);
@@ -122,10 +130,9 @@ public class VerticalPaxosMaster {
 
         pendingBallotNumber = nextBallotNumber;
         nextBallotNumber++;
-        boolean result = rpc.invokeNewBallot(pendingBallotNumber, config, currentConfig, leaderId);
+        boolean result = rpc.invokeNewBallot(pendingBallotNumber, config, completedConfig, leaderId);
         if (result) {
-            prevConfig = currentConfig;
-            currentConfig = config;
+            pendingConfig = config;
             currentLeader = leaderId;
         }
         System.out.println("[Debug] Pending ballot number: " + pendingBallotNumber);
@@ -144,6 +151,11 @@ public class VerticalPaxosMaster {
 
         largestCompleteBallotNumber = pendingBallotNumber;
         pendingBallotNumber = -1;
+
+        if (pendingConfig != -1) {
+            completedConfig = pendingConfig;
+            pendingConfig = -1;
+        }
 
         System.out.println("[Info] Accepted: " + ballotNum);
         return true;
