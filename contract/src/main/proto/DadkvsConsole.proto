@@ -4,14 +4,6 @@
 syntax = "proto3";
 package dadkvs;
 
-//message SetLeaderRequest {
-//  bool isleader = 1;
-//}
-//
-//message SetLeaderReply {
-//  bool isleaderack = 1;
-//}
-
 message SetDebugRequest {
   int32 mode = 1;
 }
@@ -21,7 +13,6 @@ message SetDebugReply {
 }
 
 service DadkvsConsoleService {
-//  rpc setleader (SetLeaderRequest) returns (SetLeaderReply);
   rpc setdebug (SetDebugRequest) returns (SetDebugReply);
 }
 

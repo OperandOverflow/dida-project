@@ -80,9 +80,8 @@ public class DadkvsConsoleClient {
 			String mainCommand = commandParts[0].toLowerCase();
 			String parameter1 = commandParts.length > 1 ? commandParts[1] : null;
 			String parameter2 = commandParts.length > 2 ? commandParts[2] : null;
-			String parameter3 = commandParts.length > 3 ? commandParts[3] : null;
 
-			switch (mainCommand) {
+            switch (mainCommand) {
 
 			case "help":
 				System.out.println(HELP_MESSAGE);
