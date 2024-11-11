@@ -1,7 +1,7 @@
 # Concurrent consistent transaction key-value store
 
 ## Overview
-This is a project developed within the course of Design and Implementation of Distributed Applications (DAD) at Instituto Superior Técnico, University of Lisbon. 
+This is a project developed within the course of Design and Implementation of Distributed Applications (DIDA) at Instituto Superior Técnico, University of Lisbon. 
 The project consists of a replicated consistent key-value store that uses the Vertical Paxos algorithm to ensure fault tolerance and flexibility of reconfiguration. 
 
 The system is composed of a set of servers that replicate the state of the key-value store and a client that issues transactions to the servers. The client can read and write keys in the key-value store, and the servers ensure that all transactions are executed in a linearizable order. The system is also able to reconfigure itself by adding or removing servers, and the servers can elect a leader to coordinate the reconfiguration process.
