@@ -37,7 +37,7 @@ The project is composed of four main components, please deploy them in the follo
 
 **Note**: For Windows machines, we have a script that automatically launches all components. Run the following command in the root directory:
 ```bash
-./run-bat
+./run.bat
 ```
 
 ### Servers
