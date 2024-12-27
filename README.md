@@ -1,4 +1,4 @@
-# Concurrent consistent transaction key-value store
+# Concurrent replicated transaction key-value store
 
 ## Overview
 This is a project developed within the course of Design and Implementation of Distributed Applications (DIDA) at Instituto Superior Técnico, University of Lisbon. 
