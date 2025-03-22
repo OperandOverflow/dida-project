@@ -219,8 +219,8 @@ public class DadkvsClient {
 		while (cursor < length) {
 			String option = args[cursor];
 			String[] option_parts = option.split(" ");
-            String option_name = option_parts[0].toLowerCase();
-            String option_parameter = option_parts.length > 1 ? option_parts[1] : null;
+            		String option_name = option_parts[0].toLowerCase();
+            		String option_parameter = option_parts.length > 1 ? option_parts[1] : null;
 
 			switch (option_name) {
 				case "--help":
@@ -276,13 +276,13 @@ public class DadkvsClient {
 
     public void goInteractive() {
 
-		System.out.println("Client Start. For the full command list, write \"help\"");
-		System.out.println("Proudly powered by Mestre Andre");
+	System.out.println("Client Start. For the full command list, write \"help\"");
+	System.out.println("Proudly powered by Mestre Andre");
 
-		Scanner scanner = new Scanner(System.in);
+	Scanner scanner = new Scanner(System.in);
         String command;
 
-		boolean keep_going = true;
+	boolean keep_going = true;
         
         while (keep_going) {
             System.out.print("client> ");
@@ -294,74 +294,74 @@ public class DadkvsClient {
             String parameter3 = commandParts.length > 3 ? commandParts[3] : null;
 
             switch (mainCommand) {
-	        	case "help":
-                    System.out.println(HELP_MESSAGE);
-                    break;
+	        case "help":
+                	System.out.println(HELP_MESSAGE);
+                    	break;
                 case "read":
-		    		System.out.println("\t[Info] read " + parameter1);
-                    if (parameter1 != null) {
-						try {
-							int key =  Integer.parseInt(parameter1);
-							VersionedValue kv_entry  = doRead (key);
-							if (kv_entry != null)
-								System.out.println("\tResult: key = " + key + ", value = " + kv_entry.getValue() + ", version = " + kv_entry.getVersion());
-							else
-								System.out.println("\t[Error] Failed to read " + key);
-						} catch (NumberFormatException e) {
-							System.out.println("\t[Error] Usage: read <key>");
-		       			 }
-					} else
-						System.out.println("\t[Error] Usage: read <key>");
-					break;
-	        	case "tx":
-		    		System.out.println("\t[Info] tx reading key: " + parameter1 + " and key: " + parameter2 + " -> writing key: " + parameter3);
-                    if ((parameter1 != null) && (parameter2!=null) && (parameter3!=null)) {
-						try {
-							int read_key1 =  Integer.parseInt(parameter1);
-							int read_key2 =  Integer.parseInt(parameter2);
-							int write_key = Integer.parseInt(parameter3);
-							if (write_key == 0)
-								System.out.println("\t[Error] key 0 is reserved for reconfiguration!");
-							else {
-								int write_value = rnd.nextInt(1000);
-								VersionedValue kv_entry1 = doRead (read_key1);
-								VersionedValue kv_entry2 = doRead (read_key2);
-								if ((kv_entry1!=null) && (kv_entry2!=null))
-									doCommit (read_key1, kv_entry1.getVersion(), read_key2, kv_entry2.getVersion(), write_key, write_value);
-								else
-									System.out.println("\t[Error] Failed to read keys");
-							}
-						} catch (NumberFormatException e) {
-							System.out.println("\t[Error] Usage: tx <read_key> <read_key> <write_key>");
-						}
-					} else
-                        System.out.println("\t[Error] Usage: tx <read_key> <read_key> <write_key>");
-		    		break;
-	        	case "length":
-		    		System.out.println("\t[Info] length " + parameter1);
-                    if (parameter1 != null) {
-						try {
-							 loop_size=  Integer.parseInt(parameter1);
-						} catch (NumberFormatException e) {
-							System.out.println("\t[Error] Usage: length <loop-length>");
-						}
-					} else
-						System.out.println("\t[Error] Usage: length <loop-length>");
+		    	System.out.println("\t[Info] read " + parameter1);
+                    	if (parameter1 != null) {
+				try {
+					int key =  Integer.parseInt(parameter1);
+					VersionedValue kv_entry  = doRead (key);
+					if (kv_entry != null)
+						System.out.println("\tResult: key = " + key + ", value = " + kv_entry.getValue() + ", version = " + kv_entry.getVersion());
+					else
+						System.out.println("\t[Error] Failed to read " + key);
+				} catch (NumberFormatException e) {
+					System.out.println("\t[Error] Usage: read <key>");
+		       		}
+			} else
+				System.out.println("\t[Error] Usage: read <key>");
+			break;
+	        case "tx":
+		    	System.out.println("\t[Info] tx reading key: " + parameter1 + " and key: " + parameter2 + " -> writing key: " + parameter3);
+                    	if ((parameter1 != null) && (parameter2!=null) && (parameter3!=null)) {
+				try {
+					int read_key1 =  Integer.parseInt(parameter1);
+					int read_key2 =  Integer.parseInt(parameter2);
+					int write_key = Integer.parseInt(parameter3);
+					if (write_key == 0)
+						System.out.println("\t[Error] key 0 is reserved for reconfiguration!");
+					else {
+						int write_value = rnd.nextInt(1000);
+						VersionedValue kv_entry1 = doRead (read_key1);
+						VersionedValue kv_entry2 = doRead (read_key2);
+						if ((kv_entry1!=null) && (kv_entry2!=null))
+							doCommit (read_key1, kv_entry1.getVersion(), read_key2, kv_entry2.getVersion(), write_key, write_value);
+						else
+							System.out.println("\t[Error] Failed to read keys");
+					}
+				} catch (NumberFormatException e) {
+					System.out.println("\t[Error] Usage: tx <read_key> <read_key> <write_key>");
+				}
+			} else
+                        	System.out.println("\t[Error] Usage: tx <read_key> <read_key> <write_key>");
+		    	break;
+	        case "length":
+		    	System.out.println("\t[Info] length " + parameter1);
+                    	if (parameter1 != null) {
+				try {
+					loop_size=  Integer.parseInt(parameter1);
+				} catch (NumberFormatException e) {
+					System.out.println("\t[Error] Usage: length <loop-length>");
+				}
+			} else
+				System.out.println("\t[Error] Usage: length <loop-length>");
+                	break;
+	        case "range":
+		    	System.out.println("\trange " + parameter1);
+                    	if (parameter1 != null) {
+				try {
+					key_range =  Integer.parseInt(parameter1);
+				} catch (NumberFormatException e) {
+					System.out.println("\t[Error] Usage: range <key-range>");
+				}
+			} else
+				System.out.println("\t[Error] Usage: range <key-range>");
                     break;
-	        	case "range":
-		    		System.out.println("\trange " + parameter1);
-                    if (parameter1 != null) {
-						try {
-							 key_range =  Integer.parseInt(parameter1);
-						} catch (NumberFormatException e) {
-							System.out.println("\t[Error] Usage: range <key-range>");
-						}
-					} else
-						System.out.println("\t[Error] Usage: range <key-range>");
-                    break;
-	        	case "time":
-		    		System.out.println("\ttime " + parameter1);
-                    if (parameter1 != null) {
+	        case "time":
+		    	System.out.println("\ttime " + parameter1);
+                    	if (parameter1 != null) {
 						try {
 							 sleep_range=  Integer.parseInt(parameter1);
 						} catch (NumberFormatException e) {
